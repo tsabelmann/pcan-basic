@@ -1,0 +1,18 @@
+[package]
+name = "pcan-basic"
+version = "0.1.0"
+description = "Rust wrapper around the PCAN-basic API by PEAK"
+keywords = ["can", "pcan", "peak", "bacis", "api"]
+categories = []
+edition = "2021"
+
+license = "MIT/Apache-2.0"
+homepage = "https://github.com/tsabelmann/pcan-basic"
+documentation = "https://docs.rs/pcan-basic"
+repository = "https://github.com/tsabelmann/pcan-basic"
+readme = "README.md"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+pcan-basic-sys = "2.0.0"
