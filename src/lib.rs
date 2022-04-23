@@ -1,8 +1,12 @@
-use pcan_basic_sys as pcan;
-use std::os::raw::c_void;
+//!
+//!
 
+pub mod bus;
 pub mod error;
-pub mod io;
+
+use crate::bus::{DngBus, IsaBus, LanBus, PciBus, ToHandle, UsbBus};
+use crate::error::{PcanError, PcanOkError};
+use pcan_basic_sys as pcan;
 
 #[derive(Debug, PartialEq)]
 pub enum MessageType {
@@ -270,513 +274,404 @@ impl PartialEq for Timestamp {
     }
 }
 
-/* TRAITS */
+pub trait CanRead {
+    fn read(&self) -> Result<(CanFrame, Timestamp), PcanError>;
+    fn read_frame(&self) -> Result<CanFrame, PcanError>;
+}
 
-pub trait ToHandle {
+pub trait CanReadFd {
+    fn read(&self) -> Result<(CanFdFrame, u64), PcanError>;
+    fn read_frame(&self) -> Result<CanFdFrame, PcanError>;
+}
+
+pub trait CanWrite {
+    fn write(&self, frame: CanFrame) -> Result<(), PcanError>;
+}
+
+pub trait CanWriteFd {
+    fn write(&self, frame: CanFdFrame) -> Result<(), PcanError>;
+}
+
+trait Socket {
     fn handle(&self) -> u16;
 }
 
-pub enum CanStatus {}
+trait HasCanRead {}
+trait HasCanReadFd {}
+trait HasCanWrite {}
+trait HasCanWriteFd {}
 
-pub enum ChannelConditionStatus {
-    Unavailable,
-    Available,
-    Occupied,
-    PCANView,
+/* Baudrate */
+
+#[derive(Debug, PartialEq)]
+pub enum Baudrate {
+    Baud1M,
+    Baud800K,
+    Baud500K,
+    Baud250K,
+    Baud125K,
+    Baud100K,
+    Baud95K,
+    Baud83,
+    Baud50K,
+    Baud47K,
+    Baud33K,
+    Baud20K,
+    Baud10K,
+    Baud5K,
 }
 
-pub trait HasChannelCondition {}
-
-pub trait ChannelCondition {
-    fn channel_condition(&self) -> Result<ChannelConditionStatus, ()>;
-}
-
-impl<T: HasChannelCondition + ToHandle> ChannelCondition for T {
-    fn channel_condition(&self) -> Result<ChannelConditionStatus, ()> {
-        let value: u32 = 0;
-        let flag = unsafe {
-            pcan::CAN_GetValue(
-                self.handle(),
-                pcan::PCAN_CHANNEL_CONDITION as u8,
-                value as *mut c_void,
-                4,
-            )
-        } == pcan::PCAN_ERROR_OK;
-
-        if flag {
-            if value & pcan::PCAN_CHANNEL_AVAILABLE == pcan::PCAN_CHANNEL_AVAILABLE {
-                return Ok(ChannelConditionStatus::Available);
-            }
-
-            if value & pcan::PCAN_CHANNEL_UNAVAILABLE == pcan::PCAN_CHANNEL_UNAVAILABLE {
-                return Ok(ChannelConditionStatus::Unavailable);
-            }
-
-            if value & pcan::PCAN_CHANNEL_OCCUPIED == pcan::PCAN_CHANNEL_OCCUPIED {
-                return Ok(ChannelConditionStatus::Occupied);
-            }
-
-            if value & pcan::PCAN_CHANNEL_PCANVIEW == pcan::PCAN_CHANNEL_PCANVIEW {
-                return Ok(ChannelConditionStatus::PCANView);
-            }
-
-            Err(())
-        } else {
-            Err(())
-        }
+impl From<Baudrate> for u16 {
+    fn from(value: Baudrate) -> Self {
+        let ret = match value {
+            Baudrate::Baud1M => pcan::PCAN_BAUD_1M,
+            Baudrate::Baud800K => pcan::PCAN_BAUD_800K,
+            Baudrate::Baud500K => pcan::PCAN_BAUD_500K,
+            Baudrate::Baud250K => pcan::PCAN_BAUD_250K,
+            Baudrate::Baud125K => pcan::PCAN_BAUD_125K,
+            Baudrate::Baud100K => pcan::PCAN_BAUD_100K,
+            Baudrate::Baud95K => pcan::PCAN_BAUD_95K,
+            Baudrate::Baud83 => pcan::PCAN_BAUD_83K,
+            Baudrate::Baud50K => pcan::PCAN_BAUD_50K,
+            Baudrate::Baud47K => pcan::PCAN_BAUD_47K,
+            Baudrate::Baud33K => pcan::PCAN_BAUD_33K,
+            Baudrate::Baud20K => pcan::PCAN_BAUD_20K,
+            Baudrate::Baud10K => pcan::PCAN_BAUD_10K,
+            Baudrate::Baud5K => pcan::PCAN_BAUD_5K,
+        } as u16;
+        ret
     }
 }
 
-/* Channel Identifying */
+/* CAN socket types */
 
-pub trait HasChannelIdentifying {}
-
-pub trait ChannelIdentifying {
-    fn enable_identifying(&self) -> Result<(), ()>;
-    fn disable_identifying(&self) -> Result<(), ()>;
-    fn identifying(&self, value: bool) -> Result<(), ()> {
-        match value {
-            false => self.disable_identifying(),
-            true => self.enable_identifying(),
-        }
-    }
-}
-
-impl<T: HasChannelIdentifying + ToHandle> ChannelIdentifying for T {
-    fn enable_identifying(&self) -> Result<(), ()> {
-        let activate = pcan::PCAN_PARAMETER_ON;
-        let flag = unsafe {
-            pcan::CAN_SetValue(
-                self.handle(),
-                pcan::PCAN_CHANNEL_IDENTIFYING as u8,
-                activate as *mut c_void,
-                4,
-            )
-        } == pcan::PCAN_ERROR_OK;
-
-        match flag {
-            true => Ok(()),
-            false => Err(()),
-        }
-    }
-
-    fn disable_identifying(&self) -> Result<(), ()> {
-        let activate = pcan::PCAN_PARAMETER_OFF;
-        let flag = unsafe {
-            pcan::CAN_SetValue(
-                self.handle(),
-                pcan::PCAN_CHANNEL_IDENTIFYING as u8,
-                activate as *mut c_void,
-                4,
-            )
-        } == pcan::PCAN_ERROR_OK;
-
-        match flag {
-            true => Ok(()),
-            false => Err(()),
-        }
-    }
-}
-
-/* Device Id */
-
-pub trait HasDeviceId {}
-
-pub trait DeviceId {
-    fn device_id(&self) -> Result<u32, ()>;
-}
-
-impl<T: HasDeviceId + ToHandle> DeviceId for T {
-    fn device_id(&self) -> Result<u32, ()> {
-        let devive_id = 0u32;
-        let flag = unsafe {
-            pcan::CAN_GetValue(
-                self.handle(),
-                pcan::PCAN_DEVICE_ID as u8,
-                devive_id as *mut c_void,
-                4,
-            )
-        } == pcan::PCAN_ERROR_OK;
-
-        match flag {
-            true => Ok(devive_id),
-            false => Err(()),
-        }
-    }
-}
-
-/* Hardware Name */
-
-pub trait HasHardwareName {}
-
-pub trait HardwareName {
-    fn hardware_name(&self) -> Result<String, ()>;
-}
-
-impl<T: HasHardwareName + ToHandle> HardwareName for T {
-    fn hardware_name(&self) -> Result<String, ()> {
-        let mut hardware_name = [0u8; pcan::MAX_LENGTH_HARDWARE_NAME as usize];
-        let flag = unsafe {
-            pcan::CAN_GetValue(
-                self.handle(),
-                pcan::PCAN_HARDWARE_NAME as u8,
-                hardware_name.as_mut_ptr() as *mut c_void,
-                pcan::MAX_LENGTH_HARDWARE_NAME,
-            )
-        } == pcan::PCAN_ERROR_OK;
-
-        match flag {
-            true => {
-                let s = std::str::from_utf8(&hardware_name);
-                match s {
-                    Ok(s) => Ok(String::from(s)),
-                    Err(_) => Err(()),
-                }
-            }
-            false => Err(()),
-        }
-    }
-}
-
-/* Controller Number */
-
-pub trait HasControllerNumber {}
-
-pub trait ControllerNumber {
-    fn controller_number(&self) -> Result<u32, ()>;
-}
-
-impl<T: HasControllerNumber + ToHandle> ControllerNumber for T {
-    fn controller_number(&self) -> Result<u32, ()> {
-        let controller_number = 0u32;
-        let flag = unsafe {
-            pcan::CAN_GetValue(
-                self.handle(),
-                pcan::PCAN_CONTROLLER_NUMBER as u8,
-                controller_number as *mut c_void,
-                4,
-            )
-        } == pcan::PCAN_ERROR_OK;
-
-        match flag {
-            true => Ok(controller_number),
-            false => Err(()),
-        }
-    }
-}
-
-/* Device Part Number */
-
-pub trait HasDevicePartNumber {}
-
-pub trait DevicePartNumber {
-    fn device_part_number(&self) -> Result<String, ()>;
-}
-
-impl<T: HasDevicePartNumber + ToHandle> DevicePartNumber for T {
-    fn device_part_number(&self) -> Result<String, ()> {
-        let mut device_part_number = [0u8; 100];
-        let flag = unsafe {
-            pcan::CAN_GetValue(
-                self.handle(),
-                pcan::PCAN_DEVICE_PART_NUMBER as u8,
-                device_part_number.as_mut_ptr() as *mut c_void,
-                100,
-            )
-        } == pcan::PCAN_ERROR_OK;
-
-        match flag {
-            true => {
-                let s = std::str::from_utf8(&device_part_number);
-                match s {
-                    Ok(s) => Ok(String::from(s)),
-                    Err(_) => Err(()),
-                }
-            }
-            false => Err(()),
-        }
-    }
-}
-
-/* BUS SECTION */
-
-///
-pub enum IsaBus {
-    ///
-    ISA1,
-    ///
-    ISA2,
-    ///
-    ISA3,
-    ///
-    ISA4,
-    ///
-    ISA5,
-    ///
-    ISA6,
-    ///
-    ISA7,
-    ///
-    ISA8,
-}
-
-impl ToHandle for IsaBus {
-    fn handle(&self) -> u16 {
-        match self {
-            IsaBus::ISA1 => pcan::PCAN_ISABUS1 as u16,
-            IsaBus::ISA2 => pcan::PCAN_ISABUS2 as u16,
-            IsaBus::ISA3 => pcan::PCAN_ISABUS3 as u16,
-            IsaBus::ISA4 => pcan::PCAN_ISABUS4 as u16,
-            IsaBus::ISA5 => pcan::PCAN_ISABUS5 as u16,
-            IsaBus::ISA6 => pcan::PCAN_ISABUS6 as u16,
-            IsaBus::ISA7 => pcan::PCAN_ISABUS7 as u16,
-            IsaBus::ISA8 => pcan::PCAN_ISABUS8 as u16,
-        }
-    }
-}
-
-impl HasChannelCondition for IsaBus {}
-impl HasHardwareName for IsaBus {}
-impl HasControllerNumber for IsaBus {}
-impl HasDevicePartNumber for IsaBus {}
-
-///
-pub enum DngBus {
-    ///
-    DNG1,
-}
-
-impl ToHandle for DngBus {
-    fn handle(&self) -> u16 {
-        match self {
-            DngBus::DNG1 => pcan::PCAN_DNGBUS1 as u16,
-        }
-    }
-}
-
-impl HasChannelCondition for DngBus {}
-impl HasHardwareName for DngBus {}
-impl HasControllerNumber for DngBus {}
-impl HasDevicePartNumber for DngBus {}
-
-///
-pub enum PciBus {
-    ///
-    PCI1,
-    ///
-    PCI2,
-    ///
-    PCI3,
-    ///
-    PCI4,
-    ///
-    PCI5,
-    ///
-    PCI6,
-    ///
-    PCI7,
-    ///
-    PCI8,
-    ///
-    PCI9,
-    ///
-    PCI10,
-    ///
-    PCI11,
-    ///
-    PCI12,
-    ///
-    PCI13,
-    ///
-    PCI14,
-    ///
-    PCI15,
-    ///
-    PCI16,
-}
-
-impl ToHandle for PciBus {
-    fn handle(&self) -> u16 {
-        match self {
-            PciBus::PCI1 => pcan::PCAN_PCIBUS1 as u16,
-            PciBus::PCI2 => pcan::PCAN_PCIBUS2 as u16,
-            PciBus::PCI3 => pcan::PCAN_PCIBUS3 as u16,
-            PciBus::PCI4 => pcan::PCAN_PCIBUS4 as u16,
-            PciBus::PCI5 => pcan::PCAN_PCIBUS5 as u16,
-            PciBus::PCI6 => pcan::PCAN_PCIBUS6 as u16,
-            PciBus::PCI7 => pcan::PCAN_PCIBUS7 as u16,
-            PciBus::PCI8 => pcan::PCAN_PCIBUS8 as u16,
-            PciBus::PCI9 => pcan::PCAN_PCIBUS9 as u16,
-            PciBus::PCI10 => pcan::PCAN_PCIBUS10 as u16,
-            PciBus::PCI11 => pcan::PCAN_PCIBUS11 as u16,
-            PciBus::PCI12 => pcan::PCAN_PCIBUS12 as u16,
-            PciBus::PCI13 => pcan::PCAN_PCIBUS13 as u16,
-            PciBus::PCI14 => pcan::PCAN_PCIBUS14 as u16,
-            PciBus::PCI15 => pcan::PCAN_PCIBUS15 as u16,
-            PciBus::PCI16 => pcan::PCAN_PCIBUS16 as u16,
-        }
-    }
-}
-
-impl HasChannelCondition for PciBus {}
-impl HasHardwareName for PciBus {}
-impl HasControllerNumber for PciBus {}
-impl HasDevicePartNumber for PciBus {}
-
-///
-pub enum UsbBus {
-    ///
-    USB1,
-    ///
-    USB2,
-    ///
-    USB3,
-    ///
-    USB4,
-    ///
-    USB5,
-    ///
-    USB6,
-    ///
-    USB7,
-    ///
-    USB8,
-    ///
-    USB9,
-    ///
-    USB10,
-    ///
-    USB11,
-    ///
-    USB12,
-    ///
-    USB13,
-    ///
-    USB14,
-    ///
-    USB15,
-    ///
-    USB16,
-}
-
-impl ToHandle for UsbBus {
-    fn handle(&self) -> u16 {
-        match self {
-            UsbBus::USB1 => pcan::PCAN_USBBUS1 as u16,
-            UsbBus::USB2 => pcan::PCAN_USBBUS2 as u16,
-            UsbBus::USB3 => pcan::PCAN_USBBUS3 as u16,
-            UsbBus::USB4 => pcan::PCAN_USBBUS4 as u16,
-            UsbBus::USB5 => pcan::PCAN_USBBUS5 as u16,
-            UsbBus::USB6 => pcan::PCAN_USBBUS6 as u16,
-            UsbBus::USB7 => pcan::PCAN_USBBUS7 as u16,
-            UsbBus::USB8 => pcan::PCAN_USBBUS8 as u16,
-            UsbBus::USB9 => pcan::PCAN_USBBUS9 as u16,
-            UsbBus::USB10 => pcan::PCAN_USBBUS10 as u16,
-            UsbBus::USB11 => pcan::PCAN_USBBUS11 as u16,
-            UsbBus::USB12 => pcan::PCAN_USBBUS12 as u16,
-            UsbBus::USB13 => pcan::PCAN_USBBUS13 as u16,
-            UsbBus::USB14 => pcan::PCAN_USBBUS14 as u16,
-            UsbBus::USB15 => pcan::PCAN_USBBUS15 as u16,
-            UsbBus::USB16 => pcan::PCAN_USBBUS16 as u16,
-        }
-    }
-}
-
-impl HasChannelCondition for UsbBus {}
-impl HasChannelIdentifying for UsbBus {}
-impl HasDeviceId for UsbBus {}
-impl HasHardwareName for UsbBus {}
-impl HasControllerNumber for UsbBus {}
-impl HasDevicePartNumber for UsbBus {}
-
-///
-pub enum PccBus {
-    ///
-    PCC1,
-    ///
-    PCC2,
-}
-
-impl ToHandle for PccBus {
-    fn handle(&self) -> u16 {
-        match self {
-            PccBus::PCC1 => pcan::PCAN_PCCBUS1 as u16,
-            PccBus::PCC2 => pcan::PCAN_PCCBUS2 as u16,
-        }
-    }
-}
-
-impl HasChannelCondition for PccBus {}
-impl HasHardwareName for PccBus {}
-impl HasControllerNumber for PccBus {}
-impl HasDevicePartNumber for PccBus {}
-
-///
-pub enum LanBus {
-    ///
-    LAN1,
-    ///
-    LAN2,
-    ///
-    LAN3,
-    ///
-    LAN4,
-    ///
-    LAN5,
-    ///
-    LAN6,
-    ///
-    LAN7,
-    ///
-    LAN8,
-    ///
-    LAN9,
-    ///
-    LAN10,
-    ///
-    LAN11,
-    ///
-    LAN12,
-    ///
-    LAN13,
-    ///
-    LAN14,
-    ///
-    LAN15,
-    ///
-    LAN16,
-}
-
-impl ToHandle for LanBus {
-    fn handle(&self) -> u16 {
-        match self {
-            LanBus::LAN1 => pcan::PCAN_LANBUS1 as u16,
-            LanBus::LAN2 => pcan::PCAN_LANBUS2 as u16,
-            LanBus::LAN3 => pcan::PCAN_LANBUS3 as u16,
-            LanBus::LAN4 => pcan::PCAN_LANBUS4 as u16,
-            LanBus::LAN5 => pcan::PCAN_LANBUS5 as u16,
-            LanBus::LAN6 => pcan::PCAN_LANBUS6 as u16,
-            LanBus::LAN7 => pcan::PCAN_LANBUS7 as u16,
-            LanBus::LAN8 => pcan::PCAN_LANBUS8 as u16,
-            LanBus::LAN9 => pcan::PCAN_LANBUS9 as u16,
-            LanBus::LAN10 => pcan::PCAN_LANBUS10 as u16,
-            LanBus::LAN11 => pcan::PCAN_LANBUS11 as u16,
-            LanBus::LAN12 => pcan::PCAN_LANBUS12 as u16,
-            LanBus::LAN13 => pcan::PCAN_LANBUS13 as u16,
-            LanBus::LAN14 => pcan::PCAN_LANBUS14 as u16,
-            LanBus::LAN15 => pcan::PCAN_LANBUS15 as u16,
-            LanBus::LAN16 => pcan::PCAN_LANBUS16 as u16,
-        }
-    }
-}
-
-impl HasChannelCondition for LanBus {}
-impl HasHardwareName for LanBus {}
-impl HasControllerNumber for LanBus {}
-impl HasDevicePartNumber for LanBus {}
-
-pub struct Channel {
+pub struct IsaCanSocket {
     handle: u16,
+}
+
+impl IsaCanSocket {
+    pub fn new(bus: IsaBus, baud: Baudrate) -> Result<IsaCanSocket, PcanError> {
+        let handle = bus.handle();
+        let code = unsafe { pcan::CAN_Initialize(handle, baud.into(), 0, 0, 0) };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => Ok(IsaCanSocket { handle }),
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
+pub struct DngCanSocket {
+    handle: u16,
+}
+
+impl DngCanSocket {
+    pub fn new(bus: DngBus, baud: Baudrate) -> Result<DngCanSocket, PcanError> {
+        let handle = bus.handle();
+        let code = unsafe { pcan::CAN_Initialize(handle, baud.into(), 0, 0, 0) };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => Ok(DngCanSocket { handle }),
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
+pub struct PciCanSocket {
+    handle: u16,
+}
+
+impl PciCanSocket {
+    pub fn new(bus: PciBus, baud: Baudrate) -> Result<PciCanSocket, PcanError> {
+        let handle = bus.handle();
+        let code = unsafe { pcan::CAN_Initialize(handle, baud.into(), 0, 0, 0) };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => Ok(PciCanSocket { handle }),
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
+pub struct PccCanSocket {
+    handle: u16,
+}
+
+impl PccCanSocket {
+    pub fn new(bus: PciBus, baud: Baudrate) -> Result<PccCanSocket, PcanError> {
+        let handle = bus.handle();
+        let code = unsafe { pcan::CAN_Initialize(handle, baud.into(), 0, 0, 0) };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => Ok(PccCanSocket { handle }),
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
+pub struct UsbCanSocket {
+    handle: u16,
+}
+
+impl UsbCanSocket {
+    pub fn new(bus: UsbBus, baud: Baudrate) -> Result<UsbCanSocket, PcanError> {
+        let handle = bus.handle();
+        let code = unsafe { pcan::CAN_Initialize(handle, baud.into(), 0, 0, 0) };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => Ok(UsbCanSocket { handle }),
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
+pub struct LanCanSocket {
+    handle: u16,
+}
+
+impl LanCanSocket {
+    pub fn new(bus: LanBus, baud: Baudrate) -> Result<LanCanSocket, PcanError> {
+        let handle = bus.handle();
+        let code = unsafe { pcan::CAN_Initialize(handle, baud.into(), 0, 0, 0) };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => Ok(LanCanSocket { handle }),
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
+pub struct CanSocket {
+    handle: u16,
+}
+
+impl CanSocket {
+    pub fn new<T: ToHandle>(bus: T, baud: Baudrate) -> Result<CanSocket, PcanError> {
+        let handle = bus.handle();
+        let code = unsafe { pcan::CAN_Initialize(handle, baud.into(), 0, 0, 0) };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => Ok(CanSocket { handle }),
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
+/* Socket trait implementations */
+
+impl Socket for IsaCanSocket {
+    fn handle(&self) -> u16 {
+        self.handle
+    }
+}
+
+impl Socket for DngCanSocket {
+    fn handle(&self) -> u16 {
+        self.handle
+    }
+}
+
+impl Socket for PciCanSocket {
+    fn handle(&self) -> u16 {
+        self.handle
+    }
+}
+
+impl Socket for PccCanSocket {
+    fn handle(&self) -> u16 {
+        self.handle
+    }
+}
+
+impl Socket for UsbCanSocket {
+    fn handle(&self) -> u16 {
+        self.handle
+    }
+}
+
+impl Socket for LanCanSocket {
+    fn handle(&self) -> u16 {
+        self.handle
+    }
+}
+
+impl Socket for CanSocket {
+    fn handle(&self) -> u16 {
+        self.handle
+    }
+}
+
+/* HasCanRead trait implementations */
+
+impl HasCanRead for IsaCanSocket {}
+impl HasCanRead for DngCanSocket {}
+impl HasCanRead for PciCanSocket {}
+impl HasCanRead for PccCanSocket {}
+impl HasCanRead for UsbCanSocket {}
+impl HasCanRead for LanCanSocket {}
+impl HasCanRead for CanSocket {}
+
+/* HasCanReadFd trait implementations */
+
+impl HasCanReadFd for IsaCanSocket {}
+impl HasCanReadFd for DngCanSocket {}
+impl HasCanReadFd for PciCanSocket {}
+impl HasCanReadFd for PccCanSocket {}
+impl HasCanReadFd for UsbCanSocket {}
+impl HasCanReadFd for LanCanSocket {}
+impl HasCanReadFd for CanSocket {}
+
+/* HasCanWrite trait implementations */
+
+impl HasCanWrite for IsaCanSocket {}
+impl HasCanWrite for DngCanSocket {}
+impl HasCanWrite for PciCanSocket {}
+impl HasCanWrite for PccCanSocket {}
+impl HasCanWrite for UsbCanSocket {}
+impl HasCanWrite for LanCanSocket {}
+impl HasCanWrite for CanSocket {}
+
+/* HasCanWriteFd trait implementations */
+
+impl HasCanWriteFd for IsaCanSocket {}
+impl HasCanWriteFd for DngCanSocket {}
+impl HasCanWriteFd for PciCanSocket {}
+impl HasCanWriteFd for PccCanSocket {}
+impl HasCanWriteFd for UsbCanSocket {}
+impl HasCanWriteFd for LanCanSocket {}
+impl HasCanWriteFd for CanSocket {}
+
+/* Drop trait implementations */
+
+struct SocketDropWrapper<T: Socket> {
+    socket: T,
+}
+
+impl<T: Socket> Drop for SocketDropWrapper<T> {
+    fn drop(&mut self) {
+        unsafe { pcan::CAN_Uninitialize(self.socket.handle()) };
+    }
+}
+
+/* CanRead trait implementations */
+
+impl<T: Socket + HasCanRead> CanRead for T {
+    fn read(&self) -> Result<(CanFrame, Timestamp), PcanError> {
+        let mut frame = CanFrame::default();
+        let mut timestamp = Timestamp::default();
+
+        let error_code = unsafe {
+            pcan::CAN_Read(
+                self.handle(),
+                &mut frame.frame as *mut pcan::TPCANMsg,
+                &mut timestamp.timestamp as *mut pcan::TPCANTimestamp,
+            )
+        };
+
+        match PcanOkError::try_from(error_code) {
+            Ok(PcanOkError::Ok) => Ok((frame, timestamp)),
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+
+    fn read_frame(&self) -> Result<CanFrame, PcanError> {
+        let mut frame = CanFrame::default();
+
+        let error_code = unsafe {
+            pcan::CAN_Read(
+                self.handle(),
+                &mut frame.frame as *mut pcan::TPCANMsg,
+                0 as *mut pcan::TPCANTimestamp,
+            )
+        };
+
+        match PcanOkError::try_from(error_code) {
+            Ok(PcanOkError::Ok) => Ok(frame),
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
+/* CanFdRead trait implementation */
+
+impl<T: Socket + HasCanReadFd> CanReadFd for T {
+    fn read(&self) -> Result<(CanFdFrame, u64), PcanError> {
+        let mut frame = CanFdFrame::default();
+        let mut timestamp = 0u64;
+
+        let error_code = unsafe {
+            pcan::CAN_ReadFD(
+                self.handle(),
+                &mut frame.frame as *mut pcan::TPCANMsgFD,
+                &mut timestamp as *mut u64,
+            )
+        };
+
+        match PcanOkError::try_from(error_code) {
+            Ok(PcanOkError::Ok) => Ok((frame, timestamp)),
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+
+    fn read_frame(&self) -> Result<CanFdFrame, PcanError> {
+        let mut frame = CanFdFrame::default();
+
+        let error_code = unsafe {
+            pcan::CAN_ReadFD(
+                self.handle(),
+                &mut frame.frame as *mut pcan::TPCANMsgFD,
+                0 as *mut u64,
+            )
+        };
+
+        match PcanOkError::try_from(error_code) {
+            Ok(PcanOkError::Ok) => Ok(frame),
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
+/* CanWrite trait implementations */
+
+impl<T: Socket + HasCanWrite> CanWrite for T {
+    fn write(&self, frame: CanFrame) -> Result<(), PcanError> {
+        let mut frame = frame;
+        let error_code =
+            unsafe { pcan::CAN_Write(self.handle(), &mut frame.frame as *mut pcan::TPCANMsg) };
+
+        match PcanOkError::try_from(error_code) {
+            Ok(PcanOkError::Ok) => Ok(()),
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
+/* CanWriteFd trait implementation */
+
+impl<T: Socket + HasCanWriteFd> CanWriteFd for T {
+    fn write(&self, frame: CanFdFrame) -> Result<(), PcanError> {
+        let mut frame = frame;
+        let error_code =
+            unsafe { pcan::CAN_WriteFD(self.handle(), &mut frame.frame as *mut pcan::TPCANMsgFD) };
+
+        match PcanOkError::try_from(error_code) {
+            Ok(PcanOkError::Ok) => Ok(()),
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
 }
 
 #[cfg(test)]
@@ -854,14 +749,6 @@ mod tests {
     #[should_panic]
     fn can_fd_frame_new_004() {
         let _can_frame_1 =
-            CanFrame::new(0x20, MessageType::Extended, &&(0..65u8).collect::<Vec<_>>()).unwrap();
-    }
-
-    /* CHANNEL CONDITION */
-    #[test]
-    #[should_panic]
-    fn usb_bus_channel_condition_001() {
-        let usb = UsbBus::USB1;
-        usb.channel_condition().unwrap();
+            CanFrame::new(0x20, MessageType::Extended, &(0..65u8).collect::<Vec<_>>()).unwrap();
     }
 }
