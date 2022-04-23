@@ -1,4 +1,5 @@
-use pcan_basic_sys as pcan;
+use crate::error::{PcanError, PcanOkError};
+use crate::pcan;
 use std::os::raw::c_void;
 
 /* TRAITS */
@@ -7,65 +8,65 @@ pub trait ToHandle {
     fn handle(&self) -> u16;
 }
 
-pub enum CanStatus {}
-
+#[derive(Debug, PartialEq)]
 pub enum ChannelConditionStatus {
     Unavailable,
     Available,
     Occupied,
-    PCANView,
+    PcanView,
 }
 
-pub trait HasChannelCondition {}
+trait HasChannelCondition {}
 
 pub trait ChannelCondition {
-    fn channel_condition(&self) -> Result<ChannelConditionStatus, ()>;
+    fn channel_condition(&self) -> Result<ChannelConditionStatus, PcanError>;
 }
 
 impl<T: HasChannelCondition + ToHandle> ChannelCondition for T {
-    fn channel_condition(&self) -> Result<ChannelConditionStatus, ()> {
+    fn channel_condition(&self) -> Result<ChannelConditionStatus, PcanError> {
         let value: u32 = 0;
-        let flag = unsafe {
+        let code = unsafe {
             pcan::CAN_GetValue(
                 self.handle(),
                 pcan::PCAN_CHANNEL_CONDITION as u8,
                 value as *mut c_void,
                 4,
             )
-        } == pcan::PCAN_ERROR_OK;
+        };
 
-        if flag {
-            if value & pcan::PCAN_CHANNEL_AVAILABLE == pcan::PCAN_CHANNEL_AVAILABLE {
-                return Ok(ChannelConditionStatus::Available);
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => {
+                if value & pcan::PCAN_CHANNEL_AVAILABLE == pcan::PCAN_CHANNEL_AVAILABLE {
+                    return Ok(ChannelConditionStatus::Available);
+                }
+
+                if value & pcan::PCAN_CHANNEL_UNAVAILABLE == pcan::PCAN_CHANNEL_UNAVAILABLE {
+                    return Ok(ChannelConditionStatus::Unavailable);
+                }
+
+                if value & pcan::PCAN_CHANNEL_OCCUPIED == pcan::PCAN_CHANNEL_OCCUPIED {
+                    return Ok(ChannelConditionStatus::Occupied);
+                }
+
+                if value & pcan::PCAN_CHANNEL_PCANVIEW == pcan::PCAN_CHANNEL_PCANVIEW {
+                    return Ok(ChannelConditionStatus::PcanView);
+                }
+                Err(PcanError::Unknown)
             }
-
-            if value & pcan::PCAN_CHANNEL_UNAVAILABLE == pcan::PCAN_CHANNEL_UNAVAILABLE {
-                return Ok(ChannelConditionStatus::Unavailable);
-            }
-
-            if value & pcan::PCAN_CHANNEL_OCCUPIED == pcan::PCAN_CHANNEL_OCCUPIED {
-                return Ok(ChannelConditionStatus::Occupied);
-            }
-
-            if value & pcan::PCAN_CHANNEL_PCANVIEW == pcan::PCAN_CHANNEL_PCANVIEW {
-                return Ok(ChannelConditionStatus::PCANView);
-            }
-
-            Err(())
-        } else {
-            Err(())
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
         }
     }
 }
 
 /* Channel Identifying */
 
-pub trait HasChannelIdentifying {}
+trait HasChannelIdentifying {}
 
 pub trait ChannelIdentifying {
-    fn enable_identifying(&self) -> Result<(), ()>;
-    fn disable_identifying(&self) -> Result<(), ()>;
-    fn identifying(&self, value: bool) -> Result<(), ()> {
+    fn enable_identifying(&self) -> Result<(), PcanError>;
+    fn disable_identifying(&self) -> Result<(), PcanError>;
+    fn identifying(&self, value: bool) -> Result<(), PcanError> {
         match value {
             false => self.disable_identifying(),
             true => self.enable_identifying(),
@@ -74,44 +75,46 @@ pub trait ChannelIdentifying {
 }
 
 impl<T: HasChannelIdentifying + ToHandle> ChannelIdentifying for T {
-    fn enable_identifying(&self) -> Result<(), ()> {
+    fn enable_identifying(&self) -> Result<(), PcanError> {
         let activate = pcan::PCAN_PARAMETER_ON;
-        let flag = unsafe {
+        let code = unsafe {
             pcan::CAN_SetValue(
                 self.handle(),
                 pcan::PCAN_CHANNEL_IDENTIFYING as u8,
                 activate as *mut c_void,
                 4,
             )
-        } == pcan::PCAN_ERROR_OK;
+        };
 
-        match flag {
-            true => Ok(()),
-            false => Err(()),
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => Ok(()),
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
         }
     }
 
-    fn disable_identifying(&self) -> Result<(), ()> {
+    fn disable_identifying(&self) -> Result<(), PcanError> {
         let activate = pcan::PCAN_PARAMETER_OFF;
-        let flag = unsafe {
+        let code = unsafe {
             pcan::CAN_SetValue(
                 self.handle(),
                 pcan::PCAN_CHANNEL_IDENTIFYING as u8,
                 activate as *mut c_void,
                 4,
             )
-        } == pcan::PCAN_ERROR_OK;
+        };
 
-        match flag {
-            true => Ok(()),
-            false => Err(()),
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => Ok(()),
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
         }
     }
 }
 
 /* Device Id */
 
-pub trait HasDeviceId {}
+trait HasDeviceId {}
 
 pub trait DeviceId {
     fn device_id(&self) -> Result<u32, ()>;
@@ -138,7 +141,7 @@ impl<T: HasDeviceId + ToHandle> DeviceId for T {
 
 /* Hardware Name */
 
-pub trait HasHardwareName {}
+trait HasHardwareName {}
 
 pub trait HardwareName {
     fn hardware_name(&self) -> Result<String, ()>;
@@ -171,7 +174,7 @@ impl<T: HasHardwareName + ToHandle> HardwareName for T {
 
 /* Controller Number */
 
-pub trait HasControllerNumber {}
+trait HasControllerNumber {}
 
 pub trait ControllerNumber {
     fn controller_number(&self) -> Result<u32, ()>;
@@ -198,7 +201,7 @@ impl<T: HasControllerNumber + ToHandle> ControllerNumber for T {
 
 /* Device Part Number */
 
-pub trait HasDevicePartNumber {}
+trait HasDevicePartNumber {}
 
 pub trait DevicePartNumber {
     fn device_part_number(&self) -> Result<String, ()>;
@@ -232,6 +235,7 @@ impl<T: HasDevicePartNumber + ToHandle> DevicePartNumber for T {
 /* BUS SECTION */
 
 ///
+#[derive(Debug, PartialEq)]
 pub enum IsaBus {
     ///
     ISA1,
@@ -272,6 +276,7 @@ impl HasControllerNumber for IsaBus {}
 impl HasDevicePartNumber for IsaBus {}
 
 ///
+#[derive(Debug, PartialEq)]
 pub enum DngBus {
     ///
     DNG1,
@@ -291,6 +296,7 @@ impl HasControllerNumber for DngBus {}
 impl HasDevicePartNumber for DngBus {}
 
 ///
+#[derive(Debug, PartialEq)]
 pub enum PciBus {
     ///
     PCI1,
@@ -355,6 +361,7 @@ impl HasControllerNumber for PciBus {}
 impl HasDevicePartNumber for PciBus {}
 
 ///
+#[derive(Debug, PartialEq)]
 pub enum UsbBus {
     ///
     USB1,
@@ -421,6 +428,7 @@ impl HasControllerNumber for UsbBus {}
 impl HasDevicePartNumber for UsbBus {}
 
 ///
+#[derive(Debug, PartialEq)]
 pub enum PccBus {
     ///
     PCC1,
@@ -443,6 +451,7 @@ impl HasControllerNumber for PccBus {}
 impl HasDevicePartNumber for PccBus {}
 
 ///
+#[derive(Debug, PartialEq)]
 pub enum LanBus {
     ///
     LAN1,
@@ -511,9 +520,12 @@ mod tests {
     use super::*;
 
     #[test]
-    #[should_panic]
     fn usb_bus_channel_condition_001() {
         let usb = UsbBus::USB1;
-        usb.channel_condition().unwrap();
+        let code = usb.channel_condition();
+        match code {
+            Ok(v) => println!("{:?}", v),
+            Err(err) => println!("{:?}", err),
+        }
     }
 }
