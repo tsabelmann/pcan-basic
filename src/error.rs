@@ -1,38 +1,68 @@
 use crate::pcan;
 
-#[derive(Debug, Clone)]
-enum PcanError {
+///
+#[derive(Debug, PartialEq)]
+pub enum PcanError {
+    ///
     XmtFull,
+    ///
     Overrun,
+    ///
     BusLight,
+    ///
     BusHeavy,
+    ///
     BusPassive,
+    ///
     BusOff,
+    ///
     AnyBusErr,
+    ///
     QrcvEmpty,
+    ///
     QOverrun,
+    ///
     QxmtFull,
+    ///
     RegTest,
+    ///
     NoDriver,
+    ///
     HwInUse,
+    ///
     NetInUse,
+    ///
     IllHw,
+    ///
     IllNet,
+    ///
     IllClient,
+    ///
     Resource,
+    ///
     IllParamType,
+    ///
     IllParamVal,
+    ///
     Unknown,
+    ///
     IllData,
+    ///
     IllMode,
+    ///
     Caution,
+    ///
     Initialize,
+    ///
     IllOperation,
 }
 
-#[derive(Debug, Clone)]
-enum PcanOkError {
+///
+#[derive(Debug, PartialEq)]
+pub enum PcanOkError {
+    ///
     Ok,
+    ///
     Err(PcanError),
 }
 
