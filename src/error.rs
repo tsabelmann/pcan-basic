@@ -1,3 +1,8 @@
+//! Module provides two error type: [PcanError] and [PcanOkError].
+//!
+//! [PcanError] models failure codes only whereas [PcanOkError] also models the possibility of
+//! success stated by the [Ok](PcanOkError::Ok) variant.
+
 use crate::pcan;
 
 ///
@@ -57,12 +62,12 @@ pub enum PcanError {
     IllOperation,
 }
 
-///
+/// Type modeling all possible states of an operation as exposed by [pcan_basic_sys].
 #[derive(Debug, PartialEq)]
 pub enum PcanOkError {
-    ///
+    /// Models the success of an operation.
     Ok,
-    ///
+    /// Models the failure. Similar to [PcanError].
     Err(PcanError),
 }
 
