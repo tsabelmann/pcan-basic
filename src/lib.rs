@@ -1,6 +1,9 @@
 use pcan_basic_sys as pcan;
 use std::os::raw::c_void;
 
+pub mod error;
+pub mod io;
+
 #[derive(Debug, PartialEq)]
 pub enum MessageType {
     Standard,
@@ -225,6 +228,41 @@ impl PartialEq for CanFdFrame {
         }
 
         if self.data() != other.data() {
+            return false;
+        }
+
+        true
+    }
+}
+
+#[derive(Debug, Copy, Clone)]
+pub struct Timestamp {
+    timestamp: pcan::TPCANTimestamp,
+}
+
+impl Default for Timestamp {
+    fn default() -> Timestamp {
+        Timestamp {
+            timestamp: pcan::TPCANTimestamp {
+                micros: 0,
+                millis: 0,
+                millis_overflow: 0,
+            },
+        }
+    }
+}
+
+impl PartialEq for Timestamp {
+    fn eq(&self, other: &Self) -> bool {
+        if self.timestamp.micros != other.timestamp.micros {
+            return false;
+        }
+
+        if self.timestamp.millis != other.timestamp.millis {
+            return false;
+        }
+
+        if self.timestamp.millis_overflow != other.timestamp.millis_overflow {
             return false;
         }
 
