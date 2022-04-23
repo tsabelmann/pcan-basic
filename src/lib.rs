@@ -345,6 +345,7 @@ impl From<Baudrate> for u16 {
 
 /* CAN socket types */
 
+#[derive(Debug, PartialEq)]
 pub struct IsaCanSocket {
     handle: u16,
 }
@@ -362,6 +363,7 @@ impl IsaCanSocket {
     }
 }
 
+#[derive(Debug, PartialEq)]
 pub struct DngCanSocket {
     handle: u16,
 }
@@ -379,6 +381,7 @@ impl DngCanSocket {
     }
 }
 
+#[derive(Debug, PartialEq)]
 pub struct PciCanSocket {
     handle: u16,
 }
@@ -396,6 +399,7 @@ impl PciCanSocket {
     }
 }
 
+#[derive(Debug, PartialEq)]
 pub struct PccCanSocket {
     handle: u16,
 }
@@ -413,6 +417,7 @@ impl PccCanSocket {
     }
 }
 
+#[derive(Debug, PartialEq)]
 pub struct UsbCanSocket {
     handle: u16,
 }
@@ -430,6 +435,7 @@ impl UsbCanSocket {
     }
 }
 
+#[derive(Debug, PartialEq)]
 pub struct LanCanSocket {
     handle: u16,
 }
@@ -447,6 +453,7 @@ impl LanCanSocket {
     }
 }
 
+#[derive(Debug, PartialEq)]
 pub struct CanSocket {
     handle: u16,
 }
@@ -750,5 +757,16 @@ mod tests {
     fn can_fd_frame_new_004() {
         let _can_frame_1 =
             CanFrame::new(0x20, MessageType::Extended, &(0..65u8).collect::<Vec<_>>()).unwrap();
+    }
+
+    /* USB CAN SOCKET */
+
+    #[test]
+    fn usb_can_socket_001() {
+        let usb_socket = UsbCanSocket::new(UsbBus::USB1, Baudrate::Baud250K);
+        match usb_socket {
+            Ok(v) => println!("{:?}", v),
+            Err(err) => println!("{:?}", err),
+        }
     }
 }
