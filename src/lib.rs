@@ -4,8 +4,8 @@
 pub mod bus;
 pub mod error;
 
-use crate::bus::{DngBus, IsaBus, LanBus, PciBus, ToHandle, UsbBus};
-use crate::error::{PcanError, PcanOkError};
+use bus::{DngBus, IsaBus, LanBus, PccBus, PciBus, ToHandle, UsbBus};
+use error::{PcanError, PcanOkError};
 use pcan_basic_sys as pcan;
 
 #[derive(Debug, PartialEq)]
@@ -351,7 +351,7 @@ pub struct IsaCanSocket {
 }
 
 impl IsaCanSocket {
-    pub fn new(bus: IsaBus, baud: Baudrate) -> Result<IsaCanSocket, PcanError> {
+    pub fn open(bus: IsaBus, baud: Baudrate) -> Result<IsaCanSocket, PcanError> {
         let handle = bus.handle();
         let code = unsafe { pcan::CAN_Initialize(handle, baud.into(), 0, 0, 0) };
 
@@ -369,7 +369,7 @@ pub struct DngCanSocket {
 }
 
 impl DngCanSocket {
-    pub fn new(bus: DngBus, baud: Baudrate) -> Result<DngCanSocket, PcanError> {
+    pub fn open(bus: DngBus, baud: Baudrate) -> Result<DngCanSocket, PcanError> {
         let handle = bus.handle();
         let code = unsafe { pcan::CAN_Initialize(handle, baud.into(), 0, 0, 0) };
 
@@ -387,7 +387,7 @@ pub struct PciCanSocket {
 }
 
 impl PciCanSocket {
-    pub fn new(bus: PciBus, baud: Baudrate) -> Result<PciCanSocket, PcanError> {
+    pub fn open(bus: PciBus, baud: Baudrate) -> Result<PciCanSocket, PcanError> {
         let handle = bus.handle();
         let code = unsafe { pcan::CAN_Initialize(handle, baud.into(), 0, 0, 0) };
 
@@ -400,30 +400,12 @@ impl PciCanSocket {
 }
 
 #[derive(Debug, PartialEq)]
-pub struct PccCanSocket {
-    handle: u16,
-}
-
-impl PccCanSocket {
-    pub fn new(bus: PciBus, baud: Baudrate) -> Result<PccCanSocket, PcanError> {
-        let handle = bus.handle();
-        let code = unsafe { pcan::CAN_Initialize(handle, baud.into(), 0, 0, 0) };
-
-        match PcanOkError::try_from(code) {
-            Ok(PcanOkError::Ok) => Ok(PccCanSocket { handle }),
-            Ok(PcanOkError::Err(err)) => Err(err),
-            Err(_) => Err(PcanError::Unknown),
-        }
-    }
-}
-
-#[derive(Debug, PartialEq)]
 pub struct UsbCanSocket {
     handle: u16,
 }
 
 impl UsbCanSocket {
-    pub fn new(bus: UsbBus, baud: Baudrate) -> Result<UsbCanSocket, PcanError> {
+    pub fn open(bus: UsbBus, baud: Baudrate) -> Result<UsbCanSocket, PcanError> {
         let handle = bus.handle();
         let code = unsafe { pcan::CAN_Initialize(handle, baud.into(), 0, 0, 0) };
 
@@ -436,12 +418,30 @@ impl UsbCanSocket {
 }
 
 #[derive(Debug, PartialEq)]
+pub struct PccCanSocket {
+    handle: u16,
+}
+
+impl PccCanSocket {
+    pub fn open(bus: PccBus, baud: Baudrate) -> Result<PccCanSocket, PcanError> {
+        let handle = bus.handle();
+        let code = unsafe { pcan::CAN_Initialize(handle, baud.into(), 0, 0, 0) };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => Ok(PccCanSocket { handle }),
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
+#[derive(Debug, PartialEq)]
 pub struct LanCanSocket {
     handle: u16,
 }
 
 impl LanCanSocket {
-    pub fn new(bus: LanBus, baud: Baudrate) -> Result<LanCanSocket, PcanError> {
+    pub fn open(bus: LanBus, baud: Baudrate) -> Result<LanCanSocket, PcanError> {
         let handle = bus.handle();
         let code = unsafe { pcan::CAN_Initialize(handle, baud.into(), 0, 0, 0) };
 
@@ -459,7 +459,7 @@ pub struct CanSocket {
 }
 
 impl CanSocket {
-    pub fn new<T: ToHandle>(bus: T, baud: Baudrate) -> Result<CanSocket, PcanError> {
+    pub fn open<T: ToHandle>(bus: T, baud: Baudrate) -> Result<CanSocket, PcanError> {
         let handle = bus.handle();
         let code = unsafe { pcan::CAN_Initialize(handle, baud.into(), 0, 0, 0) };
 
@@ -491,13 +491,13 @@ impl Socket for PciCanSocket {
     }
 }
 
-impl Socket for PccCanSocket {
+impl Socket for UsbCanSocket {
     fn handle(&self) -> u16 {
         self.handle
     }
 }
 
-impl Socket for UsbCanSocket {
+impl Socket for PccCanSocket {
     fn handle(&self) -> u16 {
         self.handle
     }
@@ -557,13 +557,45 @@ impl HasCanWriteFd for CanSocket {}
 
 /* Drop trait implementations */
 
-struct SocketDropWrapper<T: Socket> {
-    socket: T,
+impl Drop for IsaCanSocket {
+    fn drop(&mut self) {
+        unsafe { pcan::CAN_Uninitialize(self.handle) };
+    }
 }
 
-impl<T: Socket> Drop for SocketDropWrapper<T> {
+impl Drop for DngCanSocket {
     fn drop(&mut self) {
-        unsafe { pcan::CAN_Uninitialize(self.socket.handle()) };
+        unsafe { pcan::CAN_Uninitialize(self.handle) };
+    }
+}
+
+impl Drop for PciCanSocket {
+    fn drop(&mut self) {
+        unsafe { pcan::CAN_Uninitialize(self.handle) };
+    }
+}
+
+impl Drop for UsbCanSocket {
+    fn drop(&mut self) {
+        unsafe { pcan::CAN_Uninitialize(self.handle) };
+    }
+}
+
+impl Drop for PccCanSocket {
+    fn drop(&mut self) {
+        unsafe { pcan::CAN_Uninitialize(self.handle) };
+    }
+}
+
+impl Drop for LanCanSocket {
+    fn drop(&mut self) {
+        unsafe { pcan::CAN_Uninitialize(self.handle) };
+    }
+}
+
+impl Drop for CanSocket {
+    fn drop(&mut self) {
+        unsafe { pcan::CAN_Uninitialize(self.handle) };
     }
 }
 
@@ -763,7 +795,7 @@ mod tests {
 
     #[test]
     fn usb_can_socket_001() {
-        let usb_socket = UsbCanSocket::new(UsbBus::USB1, Baudrate::Baud250K);
+        let usb_socket = UsbCanSocket::open(UsbBus::USB1, Baudrate::Baud250K);
         match usb_socket {
             Ok(v) => println!("{:?}", v),
             Err(err) => println!("{:?}", err),
