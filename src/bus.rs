@@ -1,54 +1,92 @@
+//!
+//!
+
 use crate::error::{PcanError, PcanOkError};
+use crate::hw_ident::{
+    ChannelCondition, ChannelConditionStatus, ChannelIdentifying, ControllerNumber, DeviceId,
+    DevicePartNumber, HardwareName,
+};
 use crate::pcan;
 use std::os::raw::c_void;
 
-/* TRAITS */
-
-pub trait ToHandle {
-    fn handle(&self) -> u16;
+pub trait Bus {
+    fn channel(&self) -> u16;
 }
 
-#[derive(Debug, PartialEq)]
-pub enum ChannelConditionStatus {
-    Unavailable,
-    Available,
-    Occupied,
-    PcanView,
+///
+#[derive(Debug, PartialEq, Copy, Clone)]
+pub enum IsaBus {
+    ///
+    ISA1,
+    ///
+    ISA2,
+    ///
+    ISA3,
+    ///
+    ISA4,
+    ///
+    ISA5,
+    ///
+    ISA6,
+    ///
+    ISA7,
+    ///
+    ISA8,
 }
 
-impl TryFrom<u32> for ChannelConditionStatus {
+impl From<IsaBus> for u16 {
+    fn from(value: IsaBus) -> Self {
+        let ret = match value {
+            IsaBus::ISA1 => pcan::PCAN_ISABUS1,
+            IsaBus::ISA2 => pcan::PCAN_ISABUS2,
+            IsaBus::ISA3 => pcan::PCAN_ISABUS3,
+            IsaBus::ISA4 => pcan::PCAN_ISABUS4,
+            IsaBus::ISA5 => pcan::PCAN_ISABUS5,
+            IsaBus::ISA6 => pcan::PCAN_ISABUS6,
+            IsaBus::ISA7 => pcan::PCAN_ISABUS7,
+            IsaBus::ISA8 => pcan::PCAN_ISABUS8,
+        } as u16;
+        ret
+    }
+}
+
+impl TryFrom<u16> for IsaBus {
     type Error = ();
 
-    fn try_from(value: u32) -> Result<Self, Self::Error> {
-        match value {
-            pcan::PCAN_CHANNEL_AVAILABLE => Ok(ChannelConditionStatus::Available),
-            pcan::PCAN_CHANNEL_UNAVAILABLE => Ok(ChannelConditionStatus::Unavailable),
-            pcan::PCAN_CHANNEL_OCCUPIED => Ok(ChannelConditionStatus::Occupied),
-            pcan::PCAN_CHANNEL_PCANVIEW => Ok(ChannelConditionStatus::PcanView),
+    fn try_from(value: u16) -> Result<Self, Self::Error> {
+        match value as u32 {
+            pcan::PCAN_ISABUS1 => Ok(IsaBus::ISA1),
+            pcan::PCAN_ISABUS2 => Ok(IsaBus::ISA2),
+            pcan::PCAN_ISABUS3 => Ok(IsaBus::ISA3),
+            pcan::PCAN_ISABUS4 => Ok(IsaBus::ISA4),
+            pcan::PCAN_ISABUS5 => Ok(IsaBus::ISA5),
+            pcan::PCAN_ISABUS6 => Ok(IsaBus::ISA6),
+            pcan::PCAN_ISABUS7 => Ok(IsaBus::ISA7),
+            pcan::PCAN_ISABUS8 => Ok(IsaBus::ISA8),
             _ => Err(()),
         }
     }
 }
 
-trait HasChannelCondition {}
-
-pub trait ChannelCondition {
-    fn channel_condition(&self) -> Result<ChannelConditionStatus, PcanError>;
+impl Bus for IsaBus {
+    fn channel(&self) -> u16 {
+        u16::from(*self)
+    }
 }
 
-impl<T: HasChannelCondition + ToHandle> ChannelCondition for T {
+impl ChannelCondition for IsaBus {
     fn channel_condition(&self) -> Result<ChannelConditionStatus, PcanError> {
         let mut data = [0u8; 4];
         let code = unsafe {
             pcan::CAN_GetValue(
-                self.handle(),
+                self.channel(),
                 pcan::PCAN_CHANNEL_CONDITION as u8,
                 data.as_mut_ptr() as *mut c_void,
                 4,
             )
         };
-        let value: u32 = u32::from_le_bytes(data);
 
+        let value: u32 = u32::from_le_bytes(data);
         match PcanOkError::try_from(code) {
             Ok(PcanOkError::Ok) => match ChannelConditionStatus::try_from(value) {
                 Ok(status) => Ok(status),
@@ -60,101 +98,12 @@ impl<T: HasChannelCondition + ToHandle> ChannelCondition for T {
     }
 }
 
-/* Channel Identifying */
-
-trait HasChannelIdentifying {}
-
-pub trait ChannelIdentifying {
-    fn enable_identifying(&self) -> Result<(), PcanError>;
-    fn disable_identifying(&self) -> Result<(), PcanError>;
-    fn identifying(&self, value: bool) -> Result<(), PcanError> {
-        match value {
-            false => self.disable_identifying(),
-            true => self.enable_identifying(),
-        }
-    }
-}
-
-impl<T: HasChannelIdentifying + ToHandle> ChannelIdentifying for T {
-    fn enable_identifying(&self) -> Result<(), PcanError> {
-        let mut data = u32::to_le_bytes(pcan::PCAN_PARAMETER_ON);
-        let code = unsafe {
-            pcan::CAN_SetValue(
-                self.handle(),
-                pcan::PCAN_CHANNEL_IDENTIFYING as u8,
-                data.as_mut_ptr() as *mut c_void,
-                4,
-            )
-        };
-
-        match PcanOkError::try_from(code) {
-            Ok(PcanOkError::Ok) => Ok(()),
-            Ok(PcanOkError::Err(err)) => Err(err),
-            Err(_) => Err(PcanError::Unknown),
-        }
-    }
-
-    fn disable_identifying(&self) -> Result<(), PcanError> {
-        let mut data = u32::to_le_bytes(pcan::PCAN_PARAMETER_OFF);
-        let code = unsafe {
-            pcan::CAN_SetValue(
-                self.handle(),
-                pcan::PCAN_CHANNEL_IDENTIFYING as u8,
-                data.as_mut_ptr() as *mut c_void,
-                4,
-            )
-        };
-
-        match PcanOkError::try_from(code) {
-            Ok(PcanOkError::Ok) => Ok(()),
-            Ok(PcanOkError::Err(err)) => Err(err),
-            Err(_) => Err(PcanError::Unknown),
-        }
-    }
-}
-
-/* Device Id */
-
-trait HasDeviceId {}
-
-pub trait DeviceId {
-    fn device_id(&self) -> Result<u32, PcanError>;
-}
-
-impl<T: HasDeviceId + ToHandle> DeviceId for T {
-    fn device_id(&self) -> Result<u32, PcanError> {
-        let mut data = [0u8; 4];
-        let code = unsafe {
-            pcan::CAN_GetValue(
-                self.handle(),
-                pcan::PCAN_DEVICE_ID as u8,
-                data.as_mut_ptr() as *mut c_void,
-                4,
-            )
-        };
-
-        match PcanOkError::try_from(code) {
-            Ok(PcanOkError::Ok) => Ok(u32::from_le_bytes(data)),
-            Ok(PcanOkError::Err(err)) => Err(err),
-            Err(_) => Err(PcanError::Unknown),
-        }
-    }
-}
-
-/* Hardware Name */
-
-trait HasHardwareName {}
-
-pub trait HardwareName {
-    fn hardware_name(&self) -> Result<String, PcanError>;
-}
-
-impl<T: HasHardwareName + ToHandle> HardwareName for T {
+impl HardwareName for IsaBus {
     fn hardware_name(&self) -> Result<String, PcanError> {
         let mut data = [0u8; pcan::MAX_LENGTH_HARDWARE_NAME as usize];
         let code = unsafe {
             pcan::CAN_GetValue(
-                self.handle(),
+                self.channel(),
                 pcan::PCAN_HARDWARE_NAME as u8,
                 data.as_mut_ptr() as *mut c_void,
                 data.len() as u32,
@@ -175,20 +124,12 @@ impl<T: HasHardwareName + ToHandle> HardwareName for T {
     }
 }
 
-/* Controller Number */
-
-trait HasControllerNumber {}
-
-pub trait ControllerNumber {
-    fn controller_number(&self) -> Result<u32, PcanError>;
-}
-
-impl<T: HasControllerNumber + ToHandle> ControllerNumber for T {
+impl ControllerNumber for IsaBus {
     fn controller_number(&self) -> Result<u32, PcanError> {
         let mut data = [0u8; 4];
         let code = unsafe {
             pcan::CAN_GetValue(
-                self.handle(),
+                self.channel(),
                 pcan::PCAN_CONTROLLER_NUMBER as u8,
                 data.as_mut_ptr() as *mut c_void,
                 4,
@@ -203,20 +144,12 @@ impl<T: HasControllerNumber + ToHandle> ControllerNumber for T {
     }
 }
 
-/* Device Part Number */
-
-trait HasDevicePartNumber {}
-
-pub trait DevicePartNumber {
-    fn device_part_number(&self) -> Result<String, PcanError>;
-}
-
-impl<T: HasDevicePartNumber + ToHandle> DevicePartNumber for T {
+impl DevicePartNumber for IsaBus {
     fn device_part_number(&self) -> Result<String, PcanError> {
         let mut data = [0u8; 100];
         let code = unsafe {
             pcan::CAN_GetValue(
-                self.handle(),
+                self.channel(),
                 pcan::PCAN_DEVICE_PART_NUMBER as u8,
                 data.as_mut_ptr() as *mut c_void,
                 data.len() as u32,
@@ -237,103 +170,137 @@ impl<T: HasDevicePartNumber + ToHandle> DevicePartNumber for T {
     }
 }
 
-/* BUS SECTION */
-
 ///
-#[derive(Debug, PartialEq)]
-pub enum IsaBus {
-    ///
-    ISA1,
-    ///
-    ISA2,
-    ///
-    ISA3,
-    ///
-    ISA4,
-    ///
-    ISA5,
-    ///
-    ISA6,
-    ///
-    ISA7,
-    ///
-    ISA8,
-}
-
-impl From<IsaBus> for u32 {
-    fn from(value: IsaBus) -> Self {
-        match value {
-            IsaBus::ISA1 => pcan::PCAN_ISABUS1,
-            IsaBus::ISA2 => pcan::PCAN_ISABUS2,
-            IsaBus::ISA3 => pcan::PCAN_ISABUS3,
-            IsaBus::ISA4 => pcan::PCAN_ISABUS4,
-            IsaBus::ISA5 => pcan::PCAN_ISABUS5,
-            IsaBus::ISA6 => pcan::PCAN_ISABUS6,
-            IsaBus::ISA7 => pcan::PCAN_ISABUS7,
-            IsaBus::ISA8 => pcan::PCAN_ISABUS8,
-        }
-    }
-}
-
-// impl TryFrom<u32> for IsaBus {
-//     type Error = ();
-//
-//     fn try_from(value: u32) -> Result<Self, Self::Error> {
-//         Ok(IsaBus::ISA1)
-//     }
-// }
-
-impl ToHandle for IsaBus {
-    fn handle(&self) -> u16 {
-        match self {
-            IsaBus::ISA1 => pcan::PCAN_ISABUS1 as u16,
-            IsaBus::ISA2 => pcan::PCAN_ISABUS2 as u16,
-            IsaBus::ISA3 => pcan::PCAN_ISABUS3 as u16,
-            IsaBus::ISA4 => pcan::PCAN_ISABUS4 as u16,
-            IsaBus::ISA5 => pcan::PCAN_ISABUS5 as u16,
-            IsaBus::ISA6 => pcan::PCAN_ISABUS6 as u16,
-            IsaBus::ISA7 => pcan::PCAN_ISABUS7 as u16,
-            IsaBus::ISA8 => pcan::PCAN_ISABUS8 as u16,
-        }
-    }
-}
-
-///
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub enum DngBus {
     ///
     DNG1,
 }
 
-impl From<DngBus> for u32 {
+impl From<DngBus> for u16 {
     fn from(value: DngBus) -> Self {
-        match value {
+        let ret = match value {
             DngBus::DNG1 => pcan::PCAN_DNGBUS1,
-        }
+        } as u16;
+        ret
     }
 }
 
-impl TryFrom<u32> for DngBus {
+impl TryFrom<u16> for DngBus {
     type Error = ();
 
-    fn try_from(value: u32) -> Result<Self, Self::Error> {
-        match value {
+    fn try_from(value: u16) -> Result<Self, Self::Error> {
+        match value as u32 {
             pcan::PCAN_DNGBUS1 => Ok(DngBus::DNG1),
             _ => Err(()),
         }
     }
 }
 
-impl ToHandle for DngBus {
-    fn handle(&self) -> u16 {
-        match self {
-            DngBus::DNG1 => pcan::PCAN_DNGBUS1 as u16,
+impl Bus for DngBus {
+    fn channel(&self) -> u16 {
+        u16::from(*self)
+    }
+}
+
+impl ChannelCondition for DngBus {
+    fn channel_condition(&self) -> Result<ChannelConditionStatus, PcanError> {
+        let mut data = [0u8; 4];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_CHANNEL_CONDITION as u8,
+                data.as_mut_ptr() as *mut c_void,
+                4,
+            )
+        };
+
+        let value: u32 = u32::from_le_bytes(data);
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => match ChannelConditionStatus::try_from(value) {
+                Ok(status) => Ok(status),
+                Err(_) => Err(PcanError::Unknown),
+            },
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
+impl HardwareName for DngBus {
+    fn hardware_name(&self) -> Result<String, PcanError> {
+        let mut data = [0u8; pcan::MAX_LENGTH_HARDWARE_NAME as usize];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_HARDWARE_NAME as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => match std::str::from_utf8(&data) {
+                Ok(s) => {
+                    let s = s.trim_matches(char::from(0));
+                    Ok(String::from(s))
+                }
+                Err(_) => Err(PcanError::Unknown),
+            },
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
+impl ControllerNumber for DngBus {
+    fn controller_number(&self) -> Result<u32, PcanError> {
+        let mut data = [0u8; 4];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_CONTROLLER_NUMBER as u8,
+                data.as_mut_ptr() as *mut c_void,
+                4,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => Ok(u32::from_le_bytes(data)),
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
+impl DevicePartNumber for DngBus {
+    fn device_part_number(&self) -> Result<String, PcanError> {
+        let mut data = [0u8; 100];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_DEVICE_PART_NUMBER as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => match std::str::from_utf8(&data) {
+                Ok(s) => {
+                    let s = s.trim_matches(char::from(0));
+                    Ok(String::from(s))
+                }
+                Err(_) => Err(PcanError::Unknown),
+            },
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
         }
     }
 }
 
 ///
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub enum PciBus {
     ///
     PCI1,
@@ -369,31 +336,180 @@ pub enum PciBus {
     PCI16,
 }
 
-impl ToHandle for PciBus {
-    fn handle(&self) -> u16 {
-        match self {
-            PciBus::PCI1 => pcan::PCAN_PCIBUS1 as u16,
-            PciBus::PCI2 => pcan::PCAN_PCIBUS2 as u16,
-            PciBus::PCI3 => pcan::PCAN_PCIBUS3 as u16,
-            PciBus::PCI4 => pcan::PCAN_PCIBUS4 as u16,
-            PciBus::PCI5 => pcan::PCAN_PCIBUS5 as u16,
-            PciBus::PCI6 => pcan::PCAN_PCIBUS6 as u16,
-            PciBus::PCI7 => pcan::PCAN_PCIBUS7 as u16,
-            PciBus::PCI8 => pcan::PCAN_PCIBUS8 as u16,
-            PciBus::PCI9 => pcan::PCAN_PCIBUS9 as u16,
-            PciBus::PCI10 => pcan::PCAN_PCIBUS10 as u16,
-            PciBus::PCI11 => pcan::PCAN_PCIBUS11 as u16,
-            PciBus::PCI12 => pcan::PCAN_PCIBUS12 as u16,
-            PciBus::PCI13 => pcan::PCAN_PCIBUS13 as u16,
-            PciBus::PCI14 => pcan::PCAN_PCIBUS14 as u16,
-            PciBus::PCI15 => pcan::PCAN_PCIBUS15 as u16,
-            PciBus::PCI16 => pcan::PCAN_PCIBUS16 as u16,
+impl From<PciBus> for u16 {
+    fn from(value: PciBus) -> Self {
+        let ret = match value {
+            PciBus::PCI1 => pcan::PCAN_PCIBUS1,
+            PciBus::PCI2 => pcan::PCAN_PCIBUS2,
+            PciBus::PCI3 => pcan::PCAN_PCIBUS3,
+            PciBus::PCI4 => pcan::PCAN_PCIBUS4,
+            PciBus::PCI5 => pcan::PCAN_PCIBUS5,
+            PciBus::PCI6 => pcan::PCAN_PCIBUS6,
+            PciBus::PCI7 => pcan::PCAN_PCIBUS7,
+            PciBus::PCI8 => pcan::PCAN_PCIBUS8,
+            PciBus::PCI9 => pcan::PCAN_PCIBUS9,
+            PciBus::PCI10 => pcan::PCAN_PCIBUS10,
+            PciBus::PCI11 => pcan::PCAN_PCIBUS11,
+            PciBus::PCI12 => pcan::PCAN_PCIBUS12,
+            PciBus::PCI13 => pcan::PCAN_PCIBUS13,
+            PciBus::PCI14 => pcan::PCAN_PCIBUS14,
+            PciBus::PCI15 => pcan::PCAN_PCIBUS15,
+            PciBus::PCI16 => pcan::PCAN_PCIBUS16,
+        } as u16;
+        ret
+    }
+}
+
+impl TryFrom<u16> for PciBus {
+    type Error = ();
+
+    fn try_from(value: u16) -> Result<Self, Self::Error> {
+        match value as u32 {
+            pcan::PCAN_PCIBUS1 => Ok(PciBus::PCI1),
+            pcan::PCAN_PCIBUS2 => Ok(PciBus::PCI2),
+            pcan::PCAN_PCIBUS3 => Ok(PciBus::PCI3),
+            pcan::PCAN_PCIBUS4 => Ok(PciBus::PCI4),
+            pcan::PCAN_PCIBUS5 => Ok(PciBus::PCI5),
+            pcan::PCAN_PCIBUS6 => Ok(PciBus::PCI6),
+            pcan::PCAN_PCIBUS7 => Ok(PciBus::PCI7),
+            pcan::PCAN_PCIBUS8 => Ok(PciBus::PCI8),
+            pcan::PCAN_PCIBUS9 => Ok(PciBus::PCI1),
+            pcan::PCAN_PCIBUS10 => Ok(PciBus::PCI10),
+            pcan::PCAN_PCIBUS11 => Ok(PciBus::PCI11),
+            pcan::PCAN_PCIBUS12 => Ok(PciBus::PCI12),
+            pcan::PCAN_PCIBUS13 => Ok(PciBus::PCI13),
+            pcan::PCAN_PCIBUS14 => Ok(PciBus::PCI14),
+            pcan::PCAN_PCIBUS15 => Ok(PciBus::PCI15),
+            pcan::PCAN_PCIBUS16 => Ok(PciBus::PCI16),
+            _ => Err(()),
+        }
+    }
+}
+
+impl Bus for PciBus {
+    fn channel(&self) -> u16 {
+        u16::from(*self)
+    }
+}
+
+impl ChannelCondition for PciBus {
+    fn channel_condition(&self) -> Result<ChannelConditionStatus, PcanError> {
+        let mut data = [0u8; 4];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_CHANNEL_CONDITION as u8,
+                data.as_mut_ptr() as *mut c_void,
+                4,
+            )
+        };
+
+        let value: u32 = u32::from_le_bytes(data);
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => match ChannelConditionStatus::try_from(value) {
+                Ok(status) => Ok(status),
+                Err(_) => Err(PcanError::Unknown),
+            },
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
+impl DeviceId for PciBus {
+    fn device_id(&self) -> Result<u32, PcanError> {
+        let mut data = [0u8; 4];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_DEVICE_ID as u8,
+                data.as_mut_ptr() as *mut c_void,
+                4,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => Ok(u32::from_le_bytes(data)),
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
+impl HardwareName for PciBus {
+    fn hardware_name(&self) -> Result<String, PcanError> {
+        let mut data = [0u8; pcan::MAX_LENGTH_HARDWARE_NAME as usize];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_HARDWARE_NAME as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => match std::str::from_utf8(&data) {
+                Ok(s) => {
+                    let s = s.trim_matches(char::from(0));
+                    Ok(String::from(s))
+                }
+                Err(_) => Err(PcanError::Unknown),
+            },
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
+impl ControllerNumber for PciBus {
+    fn controller_number(&self) -> Result<u32, PcanError> {
+        let mut data = [0u8; 4];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_CONTROLLER_NUMBER as u8,
+                data.as_mut_ptr() as *mut c_void,
+                4,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => Ok(u32::from_le_bytes(data)),
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
+impl DevicePartNumber for PciBus {
+    fn device_part_number(&self) -> Result<String, PcanError> {
+        let mut data = [0u8; 100];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_DEVICE_PART_NUMBER as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => match std::str::from_utf8(&data) {
+                Ok(s) => {
+                    let s = s.trim_matches(char::from(0));
+                    Ok(String::from(s))
+                }
+                Err(_) => Err(PcanError::Unknown),
+            },
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
         }
     }
 }
 
 ///
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub enum UsbBus {
     ///
     USB1,
@@ -429,31 +545,243 @@ pub enum UsbBus {
     USB16,
 }
 
-impl ToHandle for UsbBus {
-    fn handle(&self) -> u16 {
-        match self {
-            UsbBus::USB1 => pcan::PCAN_USBBUS1 as u16,
-            UsbBus::USB2 => pcan::PCAN_USBBUS2 as u16,
-            UsbBus::USB3 => pcan::PCAN_USBBUS3 as u16,
-            UsbBus::USB4 => pcan::PCAN_USBBUS4 as u16,
-            UsbBus::USB5 => pcan::PCAN_USBBUS5 as u16,
-            UsbBus::USB6 => pcan::PCAN_USBBUS6 as u16,
-            UsbBus::USB7 => pcan::PCAN_USBBUS7 as u16,
-            UsbBus::USB8 => pcan::PCAN_USBBUS8 as u16,
-            UsbBus::USB9 => pcan::PCAN_USBBUS9 as u16,
-            UsbBus::USB10 => pcan::PCAN_USBBUS10 as u16,
-            UsbBus::USB11 => pcan::PCAN_USBBUS11 as u16,
-            UsbBus::USB12 => pcan::PCAN_USBBUS12 as u16,
-            UsbBus::USB13 => pcan::PCAN_USBBUS13 as u16,
-            UsbBus::USB14 => pcan::PCAN_USBBUS14 as u16,
-            UsbBus::USB15 => pcan::PCAN_USBBUS15 as u16,
-            UsbBus::USB16 => pcan::PCAN_USBBUS16 as u16,
+impl From<UsbBus> for u16 {
+    fn from(value: UsbBus) -> Self {
+        let ret = match value {
+            UsbBus::USB1 => pcan::PCAN_USBBUS1,
+            UsbBus::USB2 => pcan::PCAN_USBBUS2,
+            UsbBus::USB3 => pcan::PCAN_USBBUS3,
+            UsbBus::USB4 => pcan::PCAN_USBBUS4,
+            UsbBus::USB5 => pcan::PCAN_USBBUS5,
+            UsbBus::USB6 => pcan::PCAN_USBBUS6,
+            UsbBus::USB7 => pcan::PCAN_USBBUS7,
+            UsbBus::USB8 => pcan::PCAN_USBBUS8,
+            UsbBus::USB9 => pcan::PCAN_USBBUS9,
+            UsbBus::USB10 => pcan::PCAN_USBBUS10,
+            UsbBus::USB11 => pcan::PCAN_USBBUS11,
+            UsbBus::USB12 => pcan::PCAN_USBBUS12,
+            UsbBus::USB13 => pcan::PCAN_USBBUS13,
+            UsbBus::USB14 => pcan::PCAN_USBBUS14,
+            UsbBus::USB15 => pcan::PCAN_USBBUS15,
+            UsbBus::USB16 => pcan::PCAN_USBBUS16,
+        } as u16;
+        ret
+    }
+}
+
+impl TryFrom<u16> for UsbBus {
+    type Error = ();
+
+    fn try_from(value: u16) -> Result<Self, Self::Error> {
+        match value as u32 {
+            pcan::PCAN_USBBUS1 => Ok(UsbBus::USB1),
+            pcan::PCAN_USBBUS2 => Ok(UsbBus::USB2),
+            pcan::PCAN_USBBUS3 => Ok(UsbBus::USB3),
+            pcan::PCAN_USBBUS4 => Ok(UsbBus::USB4),
+            pcan::PCAN_USBBUS5 => Ok(UsbBus::USB5),
+            pcan::PCAN_USBBUS6 => Ok(UsbBus::USB6),
+            pcan::PCAN_USBBUS7 => Ok(UsbBus::USB7),
+            pcan::PCAN_USBBUS8 => Ok(UsbBus::USB8),
+            pcan::PCAN_USBBUS9 => Ok(UsbBus::USB9),
+            pcan::PCAN_USBBUS10 => Ok(UsbBus::USB10),
+            pcan::PCAN_USBBUS11 => Ok(UsbBus::USB11),
+            pcan::PCAN_USBBUS12 => Ok(UsbBus::USB12),
+            pcan::PCAN_USBBUS13 => Ok(UsbBus::USB13),
+            pcan::PCAN_USBBUS14 => Ok(UsbBus::USB14),
+            pcan::PCAN_USBBUS15 => Ok(UsbBus::USB15),
+            pcan::PCAN_USBBUS16 => Ok(UsbBus::USB16),
+            _ => Err(()),
+        }
+    }
+}
+
+impl Bus for UsbBus {
+    fn channel(&self) -> u16 {
+        u16::from(*self)
+    }
+}
+
+impl ChannelCondition for UsbBus {
+    fn channel_condition(&self) -> Result<ChannelConditionStatus, PcanError> {
+        let mut data = [0u8; 4];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_CHANNEL_CONDITION as u8,
+                data.as_mut_ptr() as *mut c_void,
+                4,
+            )
+        };
+
+        let value: u32 = u32::from_le_bytes(data);
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => match ChannelConditionStatus::try_from(value) {
+                Ok(status) => Ok(status),
+                Err(_) => Err(PcanError::Unknown),
+            },
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
+impl ChannelIdentifying for UsbBus {
+    fn enable_identifying(&self) -> Result<(), PcanError> {
+        let mut data = u32::to_le_bytes(pcan::PCAN_PARAMETER_ON);
+        let code = unsafe {
+            pcan::CAN_SetValue(
+                self.channel(),
+                pcan::PCAN_CHANNEL_IDENTIFYING as u8,
+                data.as_mut_ptr() as *mut c_void,
+                4,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => Ok(()),
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+
+    fn disable_identifying(&self) -> Result<(), PcanError> {
+        let mut data = u32::to_le_bytes(pcan::PCAN_PARAMETER_OFF);
+        let code = unsafe {
+            pcan::CAN_SetValue(
+                self.channel(),
+                pcan::PCAN_CHANNEL_IDENTIFYING as u8,
+                data.as_mut_ptr() as *mut c_void,
+                4,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => Ok(()),
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+
+    fn is_identifying(&self) -> Result<bool, PcanError> {
+        let mut data = [0u8; 4];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_CHANNEL_IDENTIFYING as u8,
+                data.as_mut_ptr() as *mut c_void,
+                4,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => {
+                let value = u32::from_le_bytes(data);
+                if value & pcan::PCAN_PARAMETER_ON == pcan::PCAN_PARAMETER_ON {
+                    Ok(true)
+                } else {
+                    Ok(false)
+                }
+            }
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
+impl DeviceId for UsbBus {
+    fn device_id(&self) -> Result<u32, PcanError> {
+        let mut data = [0u8; 4];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_DEVICE_ID as u8,
+                data.as_mut_ptr() as *mut c_void,
+                4,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => Ok(u32::from_le_bytes(data)),
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
+impl HardwareName for UsbBus {
+    fn hardware_name(&self) -> Result<String, PcanError> {
+        let mut data = [0u8; pcan::MAX_LENGTH_HARDWARE_NAME as usize];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_HARDWARE_NAME as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => match std::str::from_utf8(&data) {
+                Ok(s) => {
+                    let s = s.trim_matches(char::from(0));
+                    Ok(String::from(s))
+                }
+                Err(_) => Err(PcanError::Unknown),
+            },
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
+impl ControllerNumber for UsbBus {
+    fn controller_number(&self) -> Result<u32, PcanError> {
+        let mut data = [0u8; 4];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_CONTROLLER_NUMBER as u8,
+                data.as_mut_ptr() as *mut c_void,
+                4,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => Ok(u32::from_le_bytes(data)),
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
+impl DevicePartNumber for UsbBus {
+    fn device_part_number(&self) -> Result<String, PcanError> {
+        let mut data = [0u8; 100];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_DEVICE_PART_NUMBER as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => match std::str::from_utf8(&data) {
+                Ok(s) => {
+                    let s = s.trim_matches(char::from(0));
+                    Ok(String::from(s))
+                }
+                Err(_) => Err(PcanError::Unknown),
+            },
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
         }
     }
 }
 
 ///
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub enum PccBus {
     ///
     PCC1,
@@ -461,17 +789,132 @@ pub enum PccBus {
     PCC2,
 }
 
-impl ToHandle for PccBus {
-    fn handle(&self) -> u16 {
-        match self {
-            PccBus::PCC1 => pcan::PCAN_PCCBUS1 as u16,
-            PccBus::PCC2 => pcan::PCAN_PCCBUS2 as u16,
+impl From<PccBus> for u16 {
+    fn from(value: PccBus) -> Self {
+        let ret = match value {
+            PccBus::PCC1 => pcan::PCAN_PCCBUS1,
+            PccBus::PCC2 => pcan::PCAN_PCCBUS2,
+        } as u16;
+        ret
+    }
+}
+
+impl TryFrom<u16> for PccBus {
+    type Error = ();
+
+    fn try_from(value: u16) -> Result<Self, Self::Error> {
+        match value as u32 {
+            pcan::PCAN_PCCBUS1 => Ok(PccBus::PCC1),
+            pcan::PCAN_PCCBUS2 => Ok(PccBus::PCC2),
+            _ => Err(()),
+        }
+    }
+}
+
+impl Bus for PccBus {
+    fn channel(&self) -> u16 {
+        u16::from(*self)
+    }
+}
+
+impl ChannelCondition for PccBus {
+    fn channel_condition(&self) -> Result<ChannelConditionStatus, PcanError> {
+        let mut data = [0u8; 4];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_CHANNEL_CONDITION as u8,
+                data.as_mut_ptr() as *mut c_void,
+                4,
+            )
+        };
+
+        let value: u32 = u32::from_le_bytes(data);
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => match ChannelConditionStatus::try_from(value) {
+                Ok(status) => Ok(status),
+                Err(_) => Err(PcanError::Unknown),
+            },
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
+impl HardwareName for PccBus {
+    fn hardware_name(&self) -> Result<String, PcanError> {
+        let mut data = [0u8; pcan::MAX_LENGTH_HARDWARE_NAME as usize];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_HARDWARE_NAME as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => match std::str::from_utf8(&data) {
+                Ok(s) => {
+                    let s = s.trim_matches(char::from(0));
+                    Ok(String::from(s))
+                }
+                Err(_) => Err(PcanError::Unknown),
+            },
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
+impl ControllerNumber for PccBus {
+    fn controller_number(&self) -> Result<u32, PcanError> {
+        let mut data = [0u8; 4];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_CONTROLLER_NUMBER as u8,
+                data.as_mut_ptr() as *mut c_void,
+                4,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => Ok(u32::from_le_bytes(data)),
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
+impl DevicePartNumber for PccBus {
+    fn device_part_number(&self) -> Result<String, PcanError> {
+        let mut data = [0u8; 100];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_DEVICE_PART_NUMBER as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => match std::str::from_utf8(&data) {
+                Ok(s) => {
+                    let s = s.trim_matches(char::from(0));
+                    Ok(String::from(s))
+                }
+                Err(_) => Err(PcanError::Unknown),
+            },
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
         }
     }
 }
 
 ///
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub enum LanBus {
     ///
     LAN1,
@@ -507,82 +950,174 @@ pub enum LanBus {
     LAN16,
 }
 
-impl ToHandle for LanBus {
-    fn handle(&self) -> u16 {
-        match self {
-            LanBus::LAN1 => pcan::PCAN_LANBUS1 as u16,
-            LanBus::LAN2 => pcan::PCAN_LANBUS2 as u16,
-            LanBus::LAN3 => pcan::PCAN_LANBUS3 as u16,
-            LanBus::LAN4 => pcan::PCAN_LANBUS4 as u16,
-            LanBus::LAN5 => pcan::PCAN_LANBUS5 as u16,
-            LanBus::LAN6 => pcan::PCAN_LANBUS6 as u16,
-            LanBus::LAN7 => pcan::PCAN_LANBUS7 as u16,
-            LanBus::LAN8 => pcan::PCAN_LANBUS8 as u16,
-            LanBus::LAN9 => pcan::PCAN_LANBUS9 as u16,
-            LanBus::LAN10 => pcan::PCAN_LANBUS10 as u16,
-            LanBus::LAN11 => pcan::PCAN_LANBUS11 as u16,
-            LanBus::LAN12 => pcan::PCAN_LANBUS12 as u16,
-            LanBus::LAN13 => pcan::PCAN_LANBUS13 as u16,
-            LanBus::LAN14 => pcan::PCAN_LANBUS14 as u16,
-            LanBus::LAN15 => pcan::PCAN_LANBUS15 as u16,
-            LanBus::LAN16 => pcan::PCAN_LANBUS16 as u16,
+impl From<LanBus> for u16 {
+    fn from(value: LanBus) -> Self {
+        let ret = match value {
+            LanBus::LAN1 => pcan::PCAN_LANBUS1,
+            LanBus::LAN2 => pcan::PCAN_LANBUS2,
+            LanBus::LAN3 => pcan::PCAN_LANBUS3,
+            LanBus::LAN4 => pcan::PCAN_LANBUS4,
+            LanBus::LAN5 => pcan::PCAN_LANBUS5,
+            LanBus::LAN6 => pcan::PCAN_LANBUS6,
+            LanBus::LAN7 => pcan::PCAN_LANBUS7,
+            LanBus::LAN8 => pcan::PCAN_LANBUS8,
+            LanBus::LAN9 => pcan::PCAN_LANBUS9,
+            LanBus::LAN10 => pcan::PCAN_LANBUS10,
+            LanBus::LAN11 => pcan::PCAN_LANBUS11,
+            LanBus::LAN12 => pcan::PCAN_LANBUS12,
+            LanBus::LAN13 => pcan::PCAN_LANBUS13,
+            LanBus::LAN14 => pcan::PCAN_LANBUS14,
+            LanBus::LAN15 => pcan::PCAN_LANBUS15,
+            LanBus::LAN16 => pcan::PCAN_LANBUS16,
+        } as u16;
+        ret
+    }
+}
+
+impl TryFrom<u16> for LanBus {
+    type Error = ();
+
+    fn try_from(value: u16) -> Result<Self, Self::Error> {
+        match value as u32 {
+            pcan::PCAN_LANBUS1 => Ok(LanBus::LAN1),
+            pcan::PCAN_LANBUS2 => Ok(LanBus::LAN2),
+            pcan::PCAN_LANBUS3 => Ok(LanBus::LAN3),
+            pcan::PCAN_LANBUS4 => Ok(LanBus::LAN4),
+            pcan::PCAN_LANBUS5 => Ok(LanBus::LAN5),
+            pcan::PCAN_LANBUS6 => Ok(LanBus::LAN6),
+            pcan::PCAN_LANBUS7 => Ok(LanBus::LAN7),
+            pcan::PCAN_LANBUS8 => Ok(LanBus::LAN8),
+            pcan::PCAN_LANBUS9 => Ok(LanBus::LAN9),
+            pcan::PCAN_LANBUS10 => Ok(LanBus::LAN10),
+            pcan::PCAN_LANBUS11 => Ok(LanBus::LAN11),
+            pcan::PCAN_LANBUS12 => Ok(LanBus::LAN12),
+            pcan::PCAN_LANBUS13 => Ok(LanBus::LAN13),
+            pcan::PCAN_LANBUS14 => Ok(LanBus::LAN14),
+            pcan::PCAN_LANBUS15 => Ok(LanBus::LAN15),
+            pcan::PCAN_LANBUS16 => Ok(LanBus::LAN16),
+            _ => Err(()),
         }
     }
 }
 
-/* Has Channel Condition trait implementations */
-impl HasChannelCondition for IsaBus {}
-impl HasChannelCondition for DngBus {}
-impl HasChannelCondition for PciBus {}
-impl HasChannelCondition for UsbBus {}
-impl HasChannelCondition for PccBus {}
-impl HasChannelCondition for LanBus {}
+impl Bus for LanBus {
+    fn channel(&self) -> u16 {
+        u16::from(*self)
+    }
+}
 
-/* Has Device ID trait implementations */
-impl HasDeviceId for UsbBus {}
+impl ChannelCondition for LanBus {
+    fn channel_condition(&self) -> Result<ChannelConditionStatus, PcanError> {
+        let mut data = [0u8; 4];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_CHANNEL_CONDITION as u8,
+                data.as_mut_ptr() as *mut c_void,
+                4,
+            )
+        };
 
-/* Has Hardware Name trait implementations */
-impl HasHardwareName for IsaBus {}
-impl HasHardwareName for DngBus {}
-impl HasHardwareName for PciBus {}
-impl HasHardwareName for UsbBus {}
-impl HasHardwareName for PccBus {}
-impl HasHardwareName for LanBus {}
+        let value: u32 = u32::from_le_bytes(data);
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => match ChannelConditionStatus::try_from(value) {
+                Ok(status) => Ok(status),
+                Err(_) => Err(PcanError::Unknown),
+            },
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
 
-/* Has Controller Number trait implementations */
-impl HasControllerNumber for IsaBus {}
-impl HasControllerNumber for DngBus {}
-impl HasControllerNumber for PciBus {}
-impl HasControllerNumber for UsbBus {}
-impl HasControllerNumber for PccBus {}
-impl HasControllerNumber for LanBus {}
+impl DeviceId for LanBus {
+    fn device_id(&self) -> Result<u32, PcanError> {
+        let mut data = [0u8; 4];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_DEVICE_ID as u8,
+                data.as_mut_ptr() as *mut c_void,
+                4,
+            )
+        };
 
-/* Has Channel Identifying trait implementations */
-impl HasChannelIdentifying for UsbBus {}
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => Ok(u32::from_le_bytes(data)),
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
 
-/* Has Ip Address trait implementations */
+impl HardwareName for LanBus {
+    fn hardware_name(&self) -> Result<String, PcanError> {
+        let mut data = [0u8; pcan::MAX_LENGTH_HARDWARE_NAME as usize];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_HARDWARE_NAME as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
 
-/* Has Available Channels trait implementations */
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => match std::str::from_utf8(&data) {
+                Ok(s) => {
+                    let s = s.trim_matches(char::from(0));
+                    Ok(String::from(s))
+                }
+                Err(_) => Err(PcanError::Unknown),
+            },
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
 
-/* Has Device Part Number trait implementations */
-impl HasDevicePartNumber for IsaBus {}
-impl HasDevicePartNumber for DngBus {}
-impl HasDevicePartNumber for PciBus {}
-impl HasDevicePartNumber for UsbBus {}
-impl HasDevicePartNumber for PccBus {}
-impl HasDevicePartNumber for LanBus {}
+impl ControllerNumber for LanBus {
+    fn controller_number(&self) -> Result<u32, PcanError> {
+        let mut data = [0u8; 4];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_CONTROLLER_NUMBER as u8,
+                data.as_mut_ptr() as *mut c_void,
+                4,
+            )
+        };
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => Ok(u32::from_le_bytes(data)),
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
 
-    #[test]
-    fn usb_bus_channel_condition_001() {
-        let usb = UsbBus::USB1;
-        let code = usb.channel_condition();
-        match code {
-            Ok(v) => println!("{:?}", v),
-            Err(err) => println!("{:?}", err),
+impl DevicePartNumber for LanBus {
+    fn device_part_number(&self) -> Result<String, PcanError> {
+        let mut data = [0u8; 100];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_DEVICE_PART_NUMBER as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => match std::str::from_utf8(&data) {
+                Ok(s) => {
+                    let s = s.trim_matches(char::from(0));
+                    Ok(String::from(s))
+                }
+                Err(_) => Err(PcanError::Unknown),
+            },
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
         }
     }
 }
