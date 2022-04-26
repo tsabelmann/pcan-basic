@@ -260,6 +260,29 @@ pub enum IsaBus {
     ISA8,
 }
 
+impl From<IsaBus> for u32 {
+    fn from(value: IsaBus) -> Self {
+        match value {
+            IsaBus::ISA1 => pcan::PCAN_ISABUS1,
+            IsaBus::ISA2 => pcan::PCAN_ISABUS2,
+            IsaBus::ISA3 => pcan::PCAN_ISABUS3,
+            IsaBus::ISA4 => pcan::PCAN_ISABUS4,
+            IsaBus::ISA5 => pcan::PCAN_ISABUS5,
+            IsaBus::ISA6 => pcan::PCAN_ISABUS6,
+            IsaBus::ISA7 => pcan::PCAN_ISABUS7,
+            IsaBus::ISA8 => pcan::PCAN_ISABUS8,
+        }
+    }
+}
+
+// impl TryFrom<u32> for IsaBus {
+//     type Error = ();
+//
+//     fn try_from(value: u32) -> Result<Self, Self::Error> {
+//         Ok(IsaBus::ISA1)
+//     }
+// }
+
 impl ToHandle for IsaBus {
     fn handle(&self) -> u16 {
         match self {
@@ -275,16 +298,30 @@ impl ToHandle for IsaBus {
     }
 }
 
-impl HasChannelCondition for IsaBus {}
-impl HasHardwareName for IsaBus {}
-impl HasControllerNumber for IsaBus {}
-impl HasDevicePartNumber for IsaBus {}
-
 ///
 #[derive(Debug, PartialEq)]
 pub enum DngBus {
     ///
     DNG1,
+}
+
+impl From<DngBus> for u32 {
+    fn from(value: DngBus) -> Self {
+        match value {
+            DngBus::DNG1 => pcan::PCAN_DNGBUS1,
+        }
+    }
+}
+
+impl TryFrom<u32> for DngBus {
+    type Error = ();
+
+    fn try_from(value: u32) -> Result<Self, Self::Error> {
+        match value {
+            pcan::PCAN_DNGBUS1 => Ok(DngBus::DNG1),
+            _ => Err(()),
+        }
+    }
 }
 
 impl ToHandle for DngBus {
@@ -294,11 +331,6 @@ impl ToHandle for DngBus {
         }
     }
 }
-
-impl HasChannelCondition for DngBus {}
-impl HasHardwareName for DngBus {}
-impl HasControllerNumber for DngBus {}
-impl HasDevicePartNumber for DngBus {}
 
 ///
 #[derive(Debug, PartialEq)]
@@ -360,11 +392,6 @@ impl ToHandle for PciBus {
     }
 }
 
-impl HasChannelCondition for PciBus {}
-impl HasHardwareName for PciBus {}
-impl HasControllerNumber for PciBus {}
-impl HasDevicePartNumber for PciBus {}
-
 ///
 #[derive(Debug, PartialEq)]
 pub enum UsbBus {
@@ -425,13 +452,6 @@ impl ToHandle for UsbBus {
     }
 }
 
-impl HasChannelCondition for UsbBus {}
-impl HasChannelIdentifying for UsbBus {}
-impl HasDeviceId for UsbBus {}
-impl HasHardwareName for UsbBus {}
-impl HasControllerNumber for UsbBus {}
-impl HasDevicePartNumber for UsbBus {}
-
 ///
 #[derive(Debug, PartialEq)]
 pub enum PccBus {
@@ -449,11 +469,6 @@ impl ToHandle for PccBus {
         }
     }
 }
-
-impl HasChannelCondition for PccBus {}
-impl HasHardwareName for PccBus {}
-impl HasControllerNumber for PccBus {}
-impl HasDevicePartNumber for PccBus {}
 
 ///
 #[derive(Debug, PartialEq)]
@@ -515,9 +530,46 @@ impl ToHandle for LanBus {
     }
 }
 
+/* Has Channel Condition trait implementations */
+impl HasChannelCondition for IsaBus {}
+impl HasChannelCondition for DngBus {}
+impl HasChannelCondition for PciBus {}
+impl HasChannelCondition for UsbBus {}
+impl HasChannelCondition for PccBus {}
 impl HasChannelCondition for LanBus {}
+
+/* Has Device ID trait implementations */
+impl HasDeviceId for UsbBus {}
+
+/* Has Hardware Name trait implementations */
+impl HasHardwareName for IsaBus {}
+impl HasHardwareName for DngBus {}
+impl HasHardwareName for PciBus {}
+impl HasHardwareName for UsbBus {}
+impl HasHardwareName for PccBus {}
 impl HasHardwareName for LanBus {}
+
+/* Has Controller Number trait implementations */
+impl HasControllerNumber for IsaBus {}
+impl HasControllerNumber for DngBus {}
+impl HasControllerNumber for PciBus {}
+impl HasControllerNumber for UsbBus {}
+impl HasControllerNumber for PccBus {}
 impl HasControllerNumber for LanBus {}
+
+/* Has Channel Identifying trait implementations */
+impl HasChannelIdentifying for UsbBus {}
+
+/* Has Ip Address trait implementations */
+
+/* Has Available Channels trait implementations */
+
+/* Has Device Part Number trait implementations */
+impl HasDevicePartNumber for IsaBus {}
+impl HasDevicePartNumber for DngBus {}
+impl HasDevicePartNumber for PciBus {}
+impl HasDevicePartNumber for UsbBus {}
+impl HasDevicePartNumber for PccBus {}
 impl HasDevicePartNumber for LanBus {}
 
 #[cfg(test)]
