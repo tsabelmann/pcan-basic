@@ -16,6 +16,20 @@ pub enum ChannelConditionStatus {
     PcanView,
 }
 
+impl TryFrom<u32> for ChannelConditionStatus {
+    type Error = ();
+
+    fn try_from(value: u32) -> Result<Self, Self::Error> {
+        match value {
+            pcan::PCAN_CHANNEL_AVAILABLE => Ok(ChannelConditionStatus::Available),
+            pcan::PCAN_CHANNEL_UNAVAILABLE => Ok(ChannelConditionStatus::Unavailable),
+            pcan::PCAN_CHANNEL_OCCUPIED => Ok(ChannelConditionStatus::Occupied),
+            pcan::PCAN_CHANNEL_PCANVIEW => Ok(ChannelConditionStatus::PcanView),
+            _ => Err(()),
+        }
+    }
+}
+
 trait HasChannelCondition {}
 
 pub trait ChannelCondition {
@@ -24,35 +38,22 @@ pub trait ChannelCondition {
 
 impl<T: HasChannelCondition + ToHandle> ChannelCondition for T {
     fn channel_condition(&self) -> Result<ChannelConditionStatus, PcanError> {
-        let value: u32 = 0;
+        let mut data = [0u8; 4];
         let code = unsafe {
             pcan::CAN_GetValue(
                 self.handle(),
                 pcan::PCAN_CHANNEL_CONDITION as u8,
-                value as *mut c_void,
+                data.as_mut_ptr() as *mut c_void,
                 4,
             )
         };
+        let value: u32 = u32::from_le_bytes(data);
 
         match PcanOkError::try_from(code) {
-            Ok(PcanOkError::Ok) => {
-                if value & pcan::PCAN_CHANNEL_AVAILABLE == pcan::PCAN_CHANNEL_AVAILABLE {
-                    return Ok(ChannelConditionStatus::Available);
-                }
-
-                if value & pcan::PCAN_CHANNEL_UNAVAILABLE == pcan::PCAN_CHANNEL_UNAVAILABLE {
-                    return Ok(ChannelConditionStatus::Unavailable);
-                }
-
-                if value & pcan::PCAN_CHANNEL_OCCUPIED == pcan::PCAN_CHANNEL_OCCUPIED {
-                    return Ok(ChannelConditionStatus::Occupied);
-                }
-
-                if value & pcan::PCAN_CHANNEL_PCANVIEW == pcan::PCAN_CHANNEL_PCANVIEW {
-                    return Ok(ChannelConditionStatus::PcanView);
-                }
-                Err(PcanError::Unknown)
-            }
+            Ok(PcanOkError::Ok) => match ChannelConditionStatus::try_from(value) {
+                Ok(status) => Ok(status),
+                Err(_) => Err(PcanError::Unknown),
+            },
             Ok(PcanOkError::Err(err)) => Err(err),
             Err(_) => Err(PcanError::Unknown),
         }
@@ -76,12 +77,12 @@ pub trait ChannelIdentifying {
 
 impl<T: HasChannelIdentifying + ToHandle> ChannelIdentifying for T {
     fn enable_identifying(&self) -> Result<(), PcanError> {
-        let activate = pcan::PCAN_PARAMETER_ON;
+        let mut data = u32::to_le_bytes(pcan::PCAN_PARAMETER_ON);
         let code = unsafe {
             pcan::CAN_SetValue(
                 self.handle(),
                 pcan::PCAN_CHANNEL_IDENTIFYING as u8,
-                activate as *mut c_void,
+                data.as_mut_ptr() as *mut c_void,
                 4,
             )
         };
@@ -94,12 +95,12 @@ impl<T: HasChannelIdentifying + ToHandle> ChannelIdentifying for T {
     }
 
     fn disable_identifying(&self) -> Result<(), PcanError> {
-        let activate = pcan::PCAN_PARAMETER_OFF;
+        let mut data = u32::to_le_bytes(pcan::PCAN_PARAMETER_OFF);
         let code = unsafe {
             pcan::CAN_SetValue(
                 self.handle(),
                 pcan::PCAN_CHANNEL_IDENTIFYING as u8,
-                activate as *mut c_void,
+                data.as_mut_ptr() as *mut c_void,
                 4,
             )
         };
@@ -117,24 +118,25 @@ impl<T: HasChannelIdentifying + ToHandle> ChannelIdentifying for T {
 trait HasDeviceId {}
 
 pub trait DeviceId {
-    fn device_id(&self) -> Result<u32, ()>;
+    fn device_id(&self) -> Result<u32, PcanError>;
 }
 
 impl<T: HasDeviceId + ToHandle> DeviceId for T {
-    fn device_id(&self) -> Result<u32, ()> {
-        let devive_id = 0u32;
-        let flag = unsafe {
+    fn device_id(&self) -> Result<u32, PcanError> {
+        let mut data = [0u8; 4];
+        let code = unsafe {
             pcan::CAN_GetValue(
                 self.handle(),
                 pcan::PCAN_DEVICE_ID as u8,
-                devive_id as *mut c_void,
+                data.as_mut_ptr() as *mut c_void,
                 4,
             )
-        } == pcan::PCAN_ERROR_OK;
+        };
 
-        match flag {
-            true => Ok(devive_id),
-            false => Err(()),
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => Ok(u32::from_le_bytes(data)),
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
         }
     }
 }
@@ -144,30 +146,31 @@ impl<T: HasDeviceId + ToHandle> DeviceId for T {
 trait HasHardwareName {}
 
 pub trait HardwareName {
-    fn hardware_name(&self) -> Result<String, ()>;
+    fn hardware_name(&self) -> Result<String, PcanError>;
 }
 
 impl<T: HasHardwareName + ToHandle> HardwareName for T {
-    fn hardware_name(&self) -> Result<String, ()> {
-        let mut hardware_name = [0u8; pcan::MAX_LENGTH_HARDWARE_NAME as usize];
-        let flag = unsafe {
+    fn hardware_name(&self) -> Result<String, PcanError> {
+        let mut data = [0u8; pcan::MAX_LENGTH_HARDWARE_NAME as usize];
+        let code = unsafe {
             pcan::CAN_GetValue(
                 self.handle(),
                 pcan::PCAN_HARDWARE_NAME as u8,
-                hardware_name.as_mut_ptr() as *mut c_void,
-                pcan::MAX_LENGTH_HARDWARE_NAME,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
             )
-        } == pcan::PCAN_ERROR_OK;
+        };
 
-        match flag {
-            true => {
-                let s = std::str::from_utf8(&hardware_name);
-                match s {
-                    Ok(s) => Ok(String::from(s)),
-                    Err(_) => Err(()),
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => match std::str::from_utf8(&data) {
+                Ok(s) => {
+                    let s = s.trim_matches(char::from(0));
+                    Ok(String::from(s))
                 }
-            }
-            false => Err(()),
+                Err(_) => Err(PcanError::Unknown),
+            },
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
         }
     }
 }
@@ -177,24 +180,25 @@ impl<T: HasHardwareName + ToHandle> HardwareName for T {
 trait HasControllerNumber {}
 
 pub trait ControllerNumber {
-    fn controller_number(&self) -> Result<u32, ()>;
+    fn controller_number(&self) -> Result<u32, PcanError>;
 }
 
 impl<T: HasControllerNumber + ToHandle> ControllerNumber for T {
-    fn controller_number(&self) -> Result<u32, ()> {
-        let controller_number = 0u32;
-        let flag = unsafe {
+    fn controller_number(&self) -> Result<u32, PcanError> {
+        let mut data = [0u8; 4];
+        let code = unsafe {
             pcan::CAN_GetValue(
                 self.handle(),
                 pcan::PCAN_CONTROLLER_NUMBER as u8,
-                controller_number as *mut c_void,
+                data.as_mut_ptr() as *mut c_void,
                 4,
             )
-        } == pcan::PCAN_ERROR_OK;
+        };
 
-        match flag {
-            true => Ok(controller_number),
-            false => Err(()),
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => Ok(u32::from_le_bytes(data)),
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
         }
     }
 }
@@ -204,30 +208,31 @@ impl<T: HasControllerNumber + ToHandle> ControllerNumber for T {
 trait HasDevicePartNumber {}
 
 pub trait DevicePartNumber {
-    fn device_part_number(&self) -> Result<String, ()>;
+    fn device_part_number(&self) -> Result<String, PcanError>;
 }
 
 impl<T: HasDevicePartNumber + ToHandle> DevicePartNumber for T {
-    fn device_part_number(&self) -> Result<String, ()> {
-        let mut device_part_number = [0u8; 100];
-        let flag = unsafe {
+    fn device_part_number(&self) -> Result<String, PcanError> {
+        let mut data = [0u8; 100];
+        let code = unsafe {
             pcan::CAN_GetValue(
                 self.handle(),
                 pcan::PCAN_DEVICE_PART_NUMBER as u8,
-                device_part_number.as_mut_ptr() as *mut c_void,
-                100,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
             )
-        } == pcan::PCAN_ERROR_OK;
+        };
 
-        match flag {
-            true => {
-                let s = std::str::from_utf8(&device_part_number);
-                match s {
-                    Ok(s) => Ok(String::from(s)),
-                    Err(_) => Err(()),
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => match std::str::from_utf8(&data) {
+                Ok(s) => {
+                    let s = s.trim_matches(char::from(0));
+                    Ok(String::from(s))
                 }
-            }
-            false => Err(()),
+                Err(_) => Err(PcanError::Unknown),
+            },
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
         }
     }
 }
