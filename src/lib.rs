@@ -1,11 +1,15 @@
 //!
 //!
 
+extern crate core;
+
 #[warn(dead_code)]
 pub mod bus;
 pub mod error;
+pub mod hw_ident;
+pub mod info;
 
-use bus::{DngBus, IsaBus, LanBus, PccBus, PciBus, ToHandle, UsbBus};
+use bus::{Bus, DngBus, IsaBus, LanBus, PccBus, PciBus, UsbBus};
 use error::{PcanError, PcanOkError};
 use pcan_basic_sys as pcan;
 
@@ -353,11 +357,10 @@ pub struct IsaCanSocket {
 
 impl IsaCanSocket {
     pub fn open(bus: IsaBus, baud: Baudrate) -> Result<IsaCanSocket, PcanError> {
-        let handle = bus.handle();
-        let code = unsafe { pcan::CAN_Initialize(handle, baud.into(), 0, 0, 0) };
+        let code = unsafe { pcan::CAN_Initialize(bus.into(), baud.into(), 0, 0, 0) };
 
         match PcanOkError::try_from(code) {
-            Ok(PcanOkError::Ok) => Ok(IsaCanSocket { handle }),
+            Ok(PcanOkError::Ok) => Ok(IsaCanSocket { handle: bus.into() }),
             Ok(PcanOkError::Err(err)) => Err(err),
             Err(_) => Err(PcanError::Unknown),
         }
@@ -371,7 +374,7 @@ pub struct DngCanSocket {
 
 impl DngCanSocket {
     pub fn open(bus: DngBus, baud: Baudrate) -> Result<DngCanSocket, PcanError> {
-        let handle = bus.handle();
+        let handle = bus.into();
         let code = unsafe { pcan::CAN_Initialize(handle, baud.into(), 0, 0, 0) };
 
         match PcanOkError::try_from(code) {
@@ -389,7 +392,7 @@ pub struct PciCanSocket {
 
 impl PciCanSocket {
     pub fn open(bus: PciBus, baud: Baudrate) -> Result<PciCanSocket, PcanError> {
-        let handle = bus.handle();
+        let handle = bus.into();
         let code = unsafe { pcan::CAN_Initialize(handle, baud.into(), 0, 0, 0) };
 
         match PcanOkError::try_from(code) {
@@ -407,7 +410,7 @@ pub struct UsbCanSocket {
 
 impl UsbCanSocket {
     pub fn open(bus: UsbBus, baud: Baudrate) -> Result<UsbCanSocket, PcanError> {
-        let handle = bus.handle();
+        let handle = bus.into();
         let code = unsafe { pcan::CAN_Initialize(handle, baud.into(), 0, 0, 0) };
 
         match PcanOkError::try_from(code) {
@@ -425,7 +428,7 @@ pub struct PccCanSocket {
 
 impl PccCanSocket {
     pub fn open(bus: PccBus, baud: Baudrate) -> Result<PccCanSocket, PcanError> {
-        let handle = bus.handle();
+        let handle = bus.into();
         let code = unsafe { pcan::CAN_Initialize(handle, baud.into(), 0, 0, 0) };
 
         match PcanOkError::try_from(code) {
@@ -441,9 +444,11 @@ pub struct LanCanSocket {
     handle: u16,
 }
 
+pub use std::net::Ipv4Addr;
+
 impl LanCanSocket {
     pub fn open(bus: LanBus, baud: Baudrate) -> Result<LanCanSocket, PcanError> {
-        let handle = bus.handle();
+        let handle = bus.into();
         let code = unsafe { pcan::CAN_Initialize(handle, baud.into(), 0, 0, 0) };
 
         match PcanOkError::try_from(code) {
@@ -460,8 +465,8 @@ pub struct CanSocket {
 }
 
 impl CanSocket {
-    pub fn open<T: ToHandle>(bus: T, baud: Baudrate) -> Result<CanSocket, PcanError> {
-        let handle = bus.handle();
+    pub fn open<T: Bus>(bus: T, baud: Baudrate) -> Result<CanSocket, PcanError> {
+        let handle = bus.channel();
         let code = unsafe { pcan::CAN_Initialize(handle, baud.into(), 0, 0, 0) };
 
         match PcanOkError::try_from(code) {
