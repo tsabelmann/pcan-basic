@@ -6,6 +6,7 @@ use crate::hw_ident::{
     ChannelCondition, ChannelConditionStatus, ChannelIdentifying, ControllerNumber, DeviceId,
     DevicePartNumber, HardwareName,
 };
+use crate::info::{ChannelFeatures, ChannelVersion, Version};
 use crate::pcan;
 use std::os::raw::c_void;
 
@@ -73,6 +74,8 @@ impl Bus for IsaBus {
         u16::from(*self)
     }
 }
+
+/* Hardware Identification */
 
 impl ChannelCondition for IsaBus {
     fn channel_condition(&self) -> Result<ChannelConditionStatus, PcanError> {
@@ -170,6 +173,125 @@ impl DevicePartNumber for IsaBus {
     }
 }
 
+/* Informational Parameters */
+
+impl ChannelVersion for IsaBus {
+    fn channel_version(&self) -> Result<Version, PcanError> {
+        let mut data = [0u8; pcan::MAX_LENGTH_VERSION_STRING as usize];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_CHANNEL_VERSION as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => match std::str::from_utf8(&data) {
+                Ok(s) => {
+                    let newlines = s.lines().collect::<Vec<_>>();
+                    if newlines.len() == 4 {
+                        let newlines = newlines
+                            .iter()
+                            .map(|s| s.trim_matches(char::from(0)))
+                            .collect::<Vec<_>>();
+
+                        Ok(Version {
+                            device_driver_name_and_version: String::from(newlines[0]),
+                            architecture: String::from(newlines[1]),
+                            year_of_copyright: String::from(newlines[2]),
+                            company_name_and_city: String::from(newlines[4]),
+                        })
+                    } else {
+                        Err(PcanError::Unknown)
+                    }
+                }
+                Err(_) => Err(PcanError::Unknown),
+            },
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
+impl ChannelFeatures for IsaBus {
+    fn is_fd_capable(&self) -> Result<bool, PcanError> {
+        let mut data = [0u8; 4];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_CHANNEL_FEATURES as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => {
+                let value = u32::from_le_bytes(data);
+                if value & pcan::FEATURE_FD_CAPABLE == pcan::FEATURE_FD_CAPABLE {
+                    Ok(true)
+                } else {
+                    Ok(false)
+                }
+            }
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+
+    fn is_delay_capable(&self) -> Result<bool, PcanError> {
+        let mut data = [0u8; 4];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_CHANNEL_FEATURES as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => {
+                let value = u32::from_le_bytes(data);
+                if value & pcan::FEATURE_DELAY_CAPABLE == pcan::FEATURE_DELAY_CAPABLE {
+                    Ok(true)
+                } else {
+                    Ok(false)
+                }
+            }
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+
+    fn is_io_capable(&self) -> Result<bool, PcanError> {
+        let mut data = [0u8; 4];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_CHANNEL_FEATURES as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => {
+                let value = u32::from_le_bytes(data);
+                if value & pcan::FEATURE_IO_CAPABLE == pcan::FEATURE_IO_CAPABLE {
+                    Ok(true)
+                } else {
+                    Ok(false)
+                }
+            }
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
 ///
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub enum DngBus {
@@ -202,6 +324,8 @@ impl Bus for DngBus {
         u16::from(*self)
     }
 }
+
+/* Hardware Identification */
 
 impl ChannelCondition for DngBus {
     fn channel_condition(&self) -> Result<ChannelConditionStatus, PcanError> {
@@ -293,6 +417,125 @@ impl DevicePartNumber for DngBus {
                 }
                 Err(_) => Err(PcanError::Unknown),
             },
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
+/* Informational Parameters */
+
+impl ChannelVersion for DngBus {
+    fn channel_version(&self) -> Result<Version, PcanError> {
+        let mut data = [0u8; pcan::MAX_LENGTH_VERSION_STRING as usize];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_CHANNEL_VERSION as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => match std::str::from_utf8(&data) {
+                Ok(s) => {
+                    let newlines = s.lines().collect::<Vec<_>>();
+                    if newlines.len() == 4 {
+                        let newlines = newlines
+                            .iter()
+                            .map(|s| s.trim_matches(char::from(0)))
+                            .collect::<Vec<_>>();
+
+                        Ok(Version {
+                            device_driver_name_and_version: String::from(newlines[0]),
+                            architecture: String::from(newlines[1]),
+                            year_of_copyright: String::from(newlines[2]),
+                            company_name_and_city: String::from(newlines[4]),
+                        })
+                    } else {
+                        Err(PcanError::Unknown)
+                    }
+                }
+                Err(_) => Err(PcanError::Unknown),
+            },
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
+impl ChannelFeatures for DngBus {
+    fn is_fd_capable(&self) -> Result<bool, PcanError> {
+        let mut data = [0u8; 4];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_CHANNEL_FEATURES as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => {
+                let value = u32::from_le_bytes(data);
+                if value & pcan::FEATURE_FD_CAPABLE == pcan::FEATURE_FD_CAPABLE {
+                    Ok(true)
+                } else {
+                    Ok(false)
+                }
+            }
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+
+    fn is_delay_capable(&self) -> Result<bool, PcanError> {
+        let mut data = [0u8; 4];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_CHANNEL_FEATURES as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => {
+                let value = u32::from_le_bytes(data);
+                if value & pcan::FEATURE_DELAY_CAPABLE == pcan::FEATURE_DELAY_CAPABLE {
+                    Ok(true)
+                } else {
+                    Ok(false)
+                }
+            }
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+
+    fn is_io_capable(&self) -> Result<bool, PcanError> {
+        let mut data = [0u8; 4];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_CHANNEL_FEATURES as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => {
+                let value = u32::from_le_bytes(data);
+                if value & pcan::FEATURE_IO_CAPABLE == pcan::FEATURE_IO_CAPABLE {
+                    Ok(true)
+                } else {
+                    Ok(false)
+                }
+            }
             Ok(PcanOkError::Err(err)) => Err(err),
             Err(_) => Err(PcanError::Unknown),
         }
@@ -391,6 +634,8 @@ impl Bus for PciBus {
         u16::from(*self)
     }
 }
+
+/* Hardware Identification */
 
 impl ChannelCondition for PciBus {
     fn channel_condition(&self) -> Result<ChannelConditionStatus, PcanError> {
@@ -508,6 +753,125 @@ impl DevicePartNumber for PciBus {
     }
 }
 
+/* Informational Parameters */
+
+impl ChannelVersion for PciBus {
+    fn channel_version(&self) -> Result<Version, PcanError> {
+        let mut data = [0u8; pcan::MAX_LENGTH_VERSION_STRING as usize];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_CHANNEL_VERSION as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => match std::str::from_utf8(&data) {
+                Ok(s) => {
+                    let newlines = s.lines().collect::<Vec<_>>();
+                    if newlines.len() == 4 {
+                        let newlines = newlines
+                            .iter()
+                            .map(|s| s.trim_matches(char::from(0)))
+                            .collect::<Vec<_>>();
+
+                        Ok(Version {
+                            device_driver_name_and_version: String::from(newlines[0]),
+                            architecture: String::from(newlines[1]),
+                            year_of_copyright: String::from(newlines[2]),
+                            company_name_and_city: String::from(newlines[4]),
+                        })
+                    } else {
+                        Err(PcanError::Unknown)
+                    }
+                }
+                Err(_) => Err(PcanError::Unknown),
+            },
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
+impl ChannelFeatures for PciBus {
+    fn is_fd_capable(&self) -> Result<bool, PcanError> {
+        let mut data = [0u8; 4];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_CHANNEL_FEATURES as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => {
+                let value = u32::from_le_bytes(data);
+                if value & pcan::FEATURE_FD_CAPABLE == pcan::FEATURE_FD_CAPABLE {
+                    Ok(true)
+                } else {
+                    Ok(false)
+                }
+            }
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+
+    fn is_delay_capable(&self) -> Result<bool, PcanError> {
+        let mut data = [0u8; 4];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_CHANNEL_FEATURES as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => {
+                let value = u32::from_le_bytes(data);
+                if value & pcan::FEATURE_DELAY_CAPABLE == pcan::FEATURE_DELAY_CAPABLE {
+                    Ok(true)
+                } else {
+                    Ok(false)
+                }
+            }
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+
+    fn is_io_capable(&self) -> Result<bool, PcanError> {
+        let mut data = [0u8; 4];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_CHANNEL_FEATURES as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => {
+                let value = u32::from_le_bytes(data);
+                if value & pcan::FEATURE_IO_CAPABLE == pcan::FEATURE_IO_CAPABLE {
+                    Ok(true)
+                } else {
+                    Ok(false)
+                }
+            }
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
 ///
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub enum UsbBus {
@@ -600,6 +964,8 @@ impl Bus for UsbBus {
         u16::from(*self)
     }
 }
+
+/* Hardware Identification */
 
 impl ChannelCondition for UsbBus {
     fn channel_condition(&self) -> Result<ChannelConditionStatus, PcanError> {
@@ -780,6 +1146,125 @@ impl DevicePartNumber for UsbBus {
     }
 }
 
+/* Informational Parameters */
+
+impl ChannelVersion for UsbBus {
+    fn channel_version(&self) -> Result<Version, PcanError> {
+        let mut data = [0u8; pcan::MAX_LENGTH_VERSION_STRING as usize];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_CHANNEL_VERSION as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => match std::str::from_utf8(&data) {
+                Ok(s) => {
+                    let newlines = s.lines().collect::<Vec<_>>();
+                    if newlines.len() == 4 {
+                        let newlines = newlines
+                            .iter()
+                            .map(|s| s.trim_matches(char::from(0)))
+                            .collect::<Vec<_>>();
+
+                        Ok(Version {
+                            device_driver_name_and_version: String::from(newlines[0]),
+                            architecture: String::from(newlines[1]),
+                            year_of_copyright: String::from(newlines[2]),
+                            company_name_and_city: String::from(newlines[4]),
+                        })
+                    } else {
+                        Err(PcanError::Unknown)
+                    }
+                }
+                Err(_) => Err(PcanError::Unknown),
+            },
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
+impl ChannelFeatures for UsbBus {
+    fn is_fd_capable(&self) -> Result<bool, PcanError> {
+        let mut data = [0u8; 4];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_CHANNEL_FEATURES as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => {
+                let value = u32::from_le_bytes(data);
+                if value & pcan::FEATURE_FD_CAPABLE == pcan::FEATURE_FD_CAPABLE {
+                    Ok(true)
+                } else {
+                    Ok(false)
+                }
+            }
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+
+    fn is_delay_capable(&self) -> Result<bool, PcanError> {
+        let mut data = [0u8; 4];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_CHANNEL_FEATURES as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => {
+                let value = u32::from_le_bytes(data);
+                if value & pcan::FEATURE_DELAY_CAPABLE == pcan::FEATURE_DELAY_CAPABLE {
+                    Ok(true)
+                } else {
+                    Ok(false)
+                }
+            }
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+
+    fn is_io_capable(&self) -> Result<bool, PcanError> {
+        let mut data = [0u8; 4];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_CHANNEL_FEATURES as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => {
+                let value = u32::from_le_bytes(data);
+                if value & pcan::FEATURE_IO_CAPABLE == pcan::FEATURE_IO_CAPABLE {
+                    Ok(true)
+                } else {
+                    Ok(false)
+                }
+            }
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
 ///
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub enum PccBus {
@@ -816,6 +1301,8 @@ impl Bus for PccBus {
         u16::from(*self)
     }
 }
+
+/* Hardware Identification */
 
 impl ChannelCondition for PccBus {
     fn channel_condition(&self) -> Result<ChannelConditionStatus, PcanError> {
@@ -907,6 +1394,125 @@ impl DevicePartNumber for PccBus {
                 }
                 Err(_) => Err(PcanError::Unknown),
             },
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
+/* Informational Parameters */
+
+impl ChannelVersion for PccBus {
+    fn channel_version(&self) -> Result<Version, PcanError> {
+        let mut data = [0u8; pcan::MAX_LENGTH_VERSION_STRING as usize];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_CHANNEL_VERSION as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => match std::str::from_utf8(&data) {
+                Ok(s) => {
+                    let newlines = s.lines().collect::<Vec<_>>();
+                    if newlines.len() == 4 {
+                        let newlines = newlines
+                            .iter()
+                            .map(|s| s.trim_matches(char::from(0)))
+                            .collect::<Vec<_>>();
+
+                        Ok(Version {
+                            device_driver_name_and_version: String::from(newlines[0]),
+                            architecture: String::from(newlines[1]),
+                            year_of_copyright: String::from(newlines[2]),
+                            company_name_and_city: String::from(newlines[4]),
+                        })
+                    } else {
+                        Err(PcanError::Unknown)
+                    }
+                }
+                Err(_) => Err(PcanError::Unknown),
+            },
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
+impl ChannelFeatures for PccBus {
+    fn is_fd_capable(&self) -> Result<bool, PcanError> {
+        let mut data = [0u8; 4];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_CHANNEL_FEATURES as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => {
+                let value = u32::from_le_bytes(data);
+                if value & pcan::FEATURE_FD_CAPABLE == pcan::FEATURE_FD_CAPABLE {
+                    Ok(true)
+                } else {
+                    Ok(false)
+                }
+            }
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+
+    fn is_delay_capable(&self) -> Result<bool, PcanError> {
+        let mut data = [0u8; 4];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_CHANNEL_FEATURES as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => {
+                let value = u32::from_le_bytes(data);
+                if value & pcan::FEATURE_DELAY_CAPABLE == pcan::FEATURE_DELAY_CAPABLE {
+                    Ok(true)
+                } else {
+                    Ok(false)
+                }
+            }
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+
+    fn is_io_capable(&self) -> Result<bool, PcanError> {
+        let mut data = [0u8; 4];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_CHANNEL_FEATURES as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => {
+                let value = u32::from_le_bytes(data);
+                if value & pcan::FEATURE_IO_CAPABLE == pcan::FEATURE_IO_CAPABLE {
+                    Ok(true)
+                } else {
+                    Ok(false)
+                }
+            }
             Ok(PcanOkError::Err(err)) => Err(err),
             Err(_) => Err(PcanError::Unknown),
         }
@@ -1005,6 +1611,8 @@ impl Bus for LanBus {
         u16::from(*self)
     }
 }
+
+/* Hardware Identification */
 
 impl ChannelCondition for LanBus {
     fn channel_condition(&self) -> Result<ChannelConditionStatus, PcanError> {
@@ -1116,6 +1724,125 @@ impl DevicePartNumber for LanBus {
                 }
                 Err(_) => Err(PcanError::Unknown),
             },
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
+/* Informational Parameters */
+
+impl ChannelVersion for LanBus {
+    fn channel_version(&self) -> Result<Version, PcanError> {
+        let mut data = [0u8; pcan::MAX_LENGTH_VERSION_STRING as usize];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_CHANNEL_VERSION as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => match std::str::from_utf8(&data) {
+                Ok(s) => {
+                    let newlines = s.lines().collect::<Vec<_>>();
+                    if newlines.len() == 4 {
+                        let newlines = newlines
+                            .iter()
+                            .map(|s| s.trim_matches(char::from(0)))
+                            .collect::<Vec<_>>();
+
+                        Ok(Version {
+                            device_driver_name_and_version: String::from(newlines[0]),
+                            architecture: String::from(newlines[1]),
+                            year_of_copyright: String::from(newlines[2]),
+                            company_name_and_city: String::from(newlines[4]),
+                        })
+                    } else {
+                        Err(PcanError::Unknown)
+                    }
+                }
+                Err(_) => Err(PcanError::Unknown),
+            },
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
+impl ChannelFeatures for LanBus {
+    fn is_fd_capable(&self) -> Result<bool, PcanError> {
+        let mut data = [0u8; 4];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_CHANNEL_FEATURES as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => {
+                let value = u32::from_le_bytes(data);
+                if value & pcan::FEATURE_FD_CAPABLE == pcan::FEATURE_FD_CAPABLE {
+                    Ok(true)
+                } else {
+                    Ok(false)
+                }
+            }
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+
+    fn is_delay_capable(&self) -> Result<bool, PcanError> {
+        let mut data = [0u8; 4];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_CHANNEL_FEATURES as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => {
+                let value = u32::from_le_bytes(data);
+                if value & pcan::FEATURE_DELAY_CAPABLE == pcan::FEATURE_DELAY_CAPABLE {
+                    Ok(true)
+                } else {
+                    Ok(false)
+                }
+            }
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+
+    fn is_io_capable(&self) -> Result<bool, PcanError> {
+        let mut data = [0u8; 4];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_CHANNEL_FEATURES as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => {
+                let value = u32::from_le_bytes(data);
+                if value & pcan::FEATURE_IO_CAPABLE == pcan::FEATURE_IO_CAPABLE {
+                    Ok(true)
+                } else {
+                    Ok(false)
+                }
+            }
             Ok(PcanOkError::Err(err)) => Err(err),
             Err(_) => Err(PcanError::Unknown),
         }
