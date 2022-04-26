@@ -1,8 +1,8 @@
 use crate::bus::Bus;
 use crate::error::{PcanError, PcanOkError};
 use crate::hw_ident::{
-    ChannelCondition, ChannelConditionStatus, ChannelIdentifying, ControllerNumber, DeviceId,
-    DevicePartNumber, HardwareName,
+    ChannelCondition, ChannelConditionStatus, ControllerNumber, DeviceId, DevicePartNumber,
+    HardwareName,
 };
 use crate::info::{ChannelFeatures, ChannelVersion, Version};
 use crate::pcan;
