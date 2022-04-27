@@ -1,8 +1,8 @@
 //!
 //!
 
-use crate::error::PcanError;
-use crate::{pcan, PcanOkError};
+use crate::error::{PcanError, PcanOkError};
+use crate::pcan;
 use std::ffi::c_void;
 
 pub fn api_version() -> Result<String, PcanError> {
