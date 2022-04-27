@@ -297,32 +297,35 @@ impl CanSocket {
     }
 }
 
+trait HasCanRead {}
+
 pub trait CanRead {
     fn read(&self) -> Result<(CanFrame, Timestamp), PcanError>;
     fn read_frame(&self) -> Result<CanFrame, PcanError>;
 }
 
+trait HasCanReadFd {}
+
 pub trait CanReadFd {
-    fn read(&self) -> Result<(CanFdFrame, u64), PcanError>;
-    fn read_frame(&self) -> Result<CanFdFrame, PcanError>;
+    fn read_fd(&self) -> Result<(CanFdFrame, u64), PcanError>;
+    fn read_fd_frame(&self) -> Result<CanFdFrame, PcanError>;
 }
+
+trait HasCanWrite {}
 
 pub trait CanWrite {
     fn write(&self, frame: CanFrame) -> Result<(), PcanError>;
 }
 
+trait HasCanWriteFd {}
+
 pub trait CanWriteFd {
-    fn write(&self, frame: CanFdFrame) -> Result<(), PcanError>;
+    fn write_fd(&self, frame: CanFdFrame) -> Result<(), PcanError>;
 }
 
 trait Socket {
     fn handle(&self) -> u16;
 }
-
-trait HasCanRead {}
-trait HasCanReadFd {}
-trait HasCanWrite {}
-trait HasCanWriteFd {}
 
 /* Baudrate */
 
@@ -363,5 +366,119 @@ impl From<Baudrate> for u16 {
             Baudrate::Baud5K => pcan::PCAN_BAUD_5K,
         } as u16;
         ret
+    }
+}
+
+/* CanRead trait implementation */
+
+impl<T: Socket + HasCanRead> CanRead for T {
+    fn read(&self) -> Result<(CanFrame, Timestamp), PcanError> {
+        let mut frame = CanFrame::default();
+        let mut timestamp = Timestamp::default();
+
+        let error_code = unsafe {
+            pcan::CAN_Read(
+                self.handle(),
+                &mut frame.frame as *mut pcan::TPCANMsg,
+                &mut timestamp.timestamp as *mut pcan::TPCANTimestamp,
+            )
+        };
+
+        match PcanOkError::try_from(error_code) {
+            Ok(PcanOkError::Ok) => Ok((frame, timestamp)),
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+
+    fn read_frame(&self) -> Result<CanFrame, PcanError> {
+        let mut frame = CanFrame::default();
+
+        let error_code = unsafe {
+            pcan::CAN_Read(
+                self.handle(),
+                &mut frame.frame as *mut pcan::TPCANMsg,
+                0 as *mut pcan::TPCANTimestamp,
+            )
+        };
+
+        match PcanOkError::try_from(error_code) {
+            Ok(PcanOkError::Ok) => Ok(frame),
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
+/* CanFdRead trait implementation */
+
+impl<T: Socket + HasCanReadFd> CanReadFd for T {
+    fn read_fd(&self) -> Result<(CanFdFrame, u64), PcanError> {
+        let mut frame = CanFdFrame::default();
+        let mut timestamp = 0u64;
+
+        let error_code = unsafe {
+            pcan::CAN_ReadFD(
+                self.handle(),
+                &mut frame.frame as *mut pcan::TPCANMsgFD,
+                &mut timestamp as *mut u64,
+            )
+        };
+
+        match PcanOkError::try_from(error_code) {
+            Ok(PcanOkError::Ok) => Ok((frame, timestamp)),
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+
+    fn read_fd_frame(&self) -> Result<CanFdFrame, PcanError> {
+        let mut frame = CanFdFrame::default();
+
+        let error_code = unsafe {
+            pcan::CAN_ReadFD(
+                self.handle(),
+                &mut frame.frame as *mut pcan::TPCANMsgFD,
+                0 as *mut u64,
+            )
+        };
+
+        match PcanOkError::try_from(error_code) {
+            Ok(PcanOkError::Ok) => Ok(frame),
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
+/* CanWrite trait implementations */
+
+impl<T: Socket + HasCanWrite> CanWrite for T {
+    fn write(&self, frame: CanFrame) -> Result<(), PcanError> {
+        let mut frame = frame;
+        let error_code =
+            unsafe { pcan::CAN_Write(self.handle(), &mut frame.frame as *mut pcan::TPCANMsg) };
+
+        match PcanOkError::try_from(error_code) {
+            Ok(PcanOkError::Ok) => Ok(()),
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
+/* CanWriteFd trait implementation */
+
+impl<T: Socket + HasCanWriteFd> CanWriteFd for T {
+    fn write_fd(&self, frame: CanFdFrame) -> Result<(), PcanError> {
+        let mut frame = frame;
+        let error_code =
+            unsafe { pcan::CAN_WriteFD(self.handle(), &mut frame.frame as *mut pcan::TPCANMsgFD) };
+
+        match PcanOkError::try_from(error_code) {
+            Ok(PcanOkError::Ok) => Ok(()),
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
     }
 }
