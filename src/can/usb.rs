@@ -7,8 +7,8 @@ use crate::can::{Baudrate, HasCanRead, HasCanReadFd, HasCanWrite, HasCanWriteFd,
 use crate::error::{PcanError, PcanOkError};
 use crate::pcan;
 use crate::special::{
-    BusOffAutoreset, FiveVoltsPower, ListenOnly, SetBusOffAutoreset, SetFiveVoltsPower,
-    SetListenOnly,
+    BusOffAutoreset, FiveVoltsPower, InterframeDelay, ListenOnly, SetBusOffAutoreset,
+    SetFiveVoltsPower, SetInterframeDelay, SetListenOnly,
 };
 use std::ffi::c_void;
 
@@ -207,6 +207,48 @@ impl SetListenOnly for UsbCanSocket {
             pcan::CAN_SetValue(
                 self.handle,
                 pcan::PCAN_LISTEN_ONLY as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => Ok(()),
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
+/* InterframeDelay trait implementation */
+
+impl InterframeDelay for UsbCanSocket {
+    fn interframe_delay(&self) -> Result<u32, PcanError> {
+        let mut data = [0u8; 4];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.handle,
+                pcan::PCAN_INTERFRAME_DELAY as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => Ok(u32::from_le_bytes(data)),
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
+impl SetInterframeDelay for UsbCanSocket {
+    fn set_interframe_delay(&self, value: u32) -> Result<(), PcanError> {
+        let mut data = value.to_le_bytes();
+        let code = unsafe {
+            pcan::CAN_SetValue(
+                self.handle,
+                pcan::PCAN_INTERFRAME_DELAY as u8,
                 data.as_mut_ptr() as *mut c_void,
                 data.len() as u32,
             )
