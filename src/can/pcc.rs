@@ -7,8 +7,6 @@ use crate::can::{Baudrate, HasCanRead, HasCanReadFd, HasCanWrite, HasCanWriteFd,
 use crate::channel::Channel;
 use crate::error::{PcanError, PcanOkError};
 use crate::pcan;
-use crate::special;
-use std::ffi::c_void;
 
 #[derive(Debug, PartialEq)]
 pub struct PccCanSocket {

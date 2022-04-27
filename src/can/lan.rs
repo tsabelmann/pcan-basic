@@ -6,11 +6,7 @@ use crate::bus::LanBus;
 use crate::can::{Baudrate, HasCanRead, HasCanReadFd, HasCanWrite, HasCanWriteFd, Socket};
 use crate::channel::Channel;
 use crate::error::{PcanError, PcanOkError};
-use crate::hw_ident::IpAddress;
 use crate::pcan;
-use crate::special;
-use std::ffi::c_void;
-use std::net::Ipv4Addr;
 
 #[derive(Debug, PartialEq)]
 pub struct LanCanSocket {

@@ -1,13 +1,12 @@
 //!
 //!
+//!
 
 use crate::bus::IsaBus;
 use crate::can::{Baudrate, HasCanRead, HasCanReadFd, HasCanWrite, HasCanWriteFd, Socket};
 use crate::channel::Channel;
 use crate::error::{PcanError, PcanOkError};
 use crate::pcan;
-use crate::special::{BusOffAutoreset, ListenOnly, SetBusOffAutoreset, SetListenOnly};
-use std::ffi::c_void;
 
 #[derive(Debug, PartialEq)]
 pub struct IsaCanSocket {
