@@ -120,7 +120,7 @@ impl ChannelCondition for PciBus {
         let mut data = [0u8; 4];
         let code = unsafe {
             pcan::CAN_GetValue(
-                self.channel(),
+                Bus::channel(self),
                 pcan::PCAN_CHANNEL_CONDITION as u8,
                 data.as_mut_ptr() as *mut c_void,
                 4,
@@ -144,7 +144,7 @@ impl DeviceId for PciBus {
         let mut data = [0u8; 4];
         let code = unsafe {
             pcan::CAN_GetValue(
-                self.channel(),
+                Bus::channel(self),
                 pcan::PCAN_DEVICE_ID as u8,
                 data.as_mut_ptr() as *mut c_void,
                 4,
@@ -164,7 +164,7 @@ impl HardwareName for PciBus {
         let mut data = [0u8; pcan::MAX_LENGTH_HARDWARE_NAME as usize];
         let code = unsafe {
             pcan::CAN_GetValue(
-                self.channel(),
+                Bus::channel(self),
                 pcan::PCAN_HARDWARE_NAME as u8,
                 data.as_mut_ptr() as *mut c_void,
                 data.len() as u32,
@@ -190,7 +190,7 @@ impl ControllerNumber for PciBus {
         let mut data = [0u8; 4];
         let code = unsafe {
             pcan::CAN_GetValue(
-                self.channel(),
+                Bus::channel(self),
                 pcan::PCAN_CONTROLLER_NUMBER as u8,
                 data.as_mut_ptr() as *mut c_void,
                 4,
@@ -210,7 +210,7 @@ impl DevicePartNumber for PciBus {
         let mut data = [0u8; 100];
         let code = unsafe {
             pcan::CAN_GetValue(
-                self.channel(),
+                Bus::channel(self),
                 pcan::PCAN_DEVICE_PART_NUMBER as u8,
                 data.as_mut_ptr() as *mut c_void,
                 data.len() as u32,
@@ -238,7 +238,7 @@ impl ChannelVersion for PciBus {
         let mut data = [0u8; pcan::MAX_LENGTH_VERSION_STRING as usize];
         let code = unsafe {
             pcan::CAN_GetValue(
-                self.channel(),
+                Bus::channel(self),
                 pcan::PCAN_CHANNEL_VERSION as u8,
                 data.as_mut_ptr() as *mut c_void,
                 data.len() as u32,
@@ -278,7 +278,7 @@ impl ChannelFeatures for PciBus {
         let mut data = [0u8; 4];
         let code = unsafe {
             pcan::CAN_GetValue(
-                self.channel(),
+                Bus::channel(self),
                 pcan::PCAN_CHANNEL_FEATURES as u8,
                 data.as_mut_ptr() as *mut c_void,
                 data.len() as u32,
@@ -303,7 +303,7 @@ impl ChannelFeatures for PciBus {
         let mut data = [0u8; 4];
         let code = unsafe {
             pcan::CAN_GetValue(
-                self.channel(),
+                Bus::channel(self),
                 pcan::PCAN_CHANNEL_FEATURES as u8,
                 data.as_mut_ptr() as *mut c_void,
                 data.len() as u32,
@@ -328,7 +328,7 @@ impl ChannelFeatures for PciBus {
         let mut data = [0u8; 4];
         let code = unsafe {
             pcan::CAN_GetValue(
-                self.channel(),
+                Bus::channel(self),
                 pcan::PCAN_CHANNEL_FEATURES as u8,
                 data.as_mut_ptr() as *mut c_void,
                 data.len() as u32,
