@@ -37,9 +37,17 @@ pub struct Version {
     pub company_name_and_city: String,
 }
 
+/* ChannelVersion trait */
+
+pub(crate) trait HasChannelVersion {}
+
 pub trait ChannelVersion {
     fn channel_version(&self) -> Result<Version, PcanError>;
 }
+
+/* ChannelFeatures trait */
+
+pub(crate) trait HasChannelFeatures {}
 
 pub trait ChannelFeatures {
     fn is_fd_capable(&self) -> Result<bool, PcanError>;
@@ -47,17 +55,33 @@ pub trait ChannelFeatures {
     fn is_io_capable(&self) -> Result<bool, PcanError>;
 }
 
+/* BitrateInfo trait */
+
+pub(crate) trait HasBitrateInfo {}
+
 pub trait BitrateInfo {
     fn bitrate_info(&self) -> Result<u16, PcanError>;
 }
+
+/* BitrateFdInfo trait */
+
+pub(crate) trait HasBitrateFdInfo {}
 
 pub trait BitrateFdInfo {
     fn bitrate_fd_info(&self) -> Result<u16, PcanError>;
 }
 
+/* NominalBusSpeed trait */
+
+pub(crate) trait HasNominalBusSpeed {}
+
 pub trait NominalBusSpeed {
     fn nominal_bus_speed(&self) -> Result<u32, PcanError>;
 }
+
+/* DataBusSpeed trait */
+
+pub(crate) trait HasDataBusSpeed {}
 
 pub trait DataBusSpeed {
     fn data_bus_speed(&self) -> Result<u32, PcanError>;
@@ -88,6 +112,10 @@ pub trait DataBusSpeed {
 // }
 
 // pub fn lan_service_not_running() -> Result<bool, PcanError>
+
+/* FirmwareVersion trait */
+
+pub(crate) trait HasFirmwareVersion {}
 
 pub trait FirmwareVersion {
     fn firmware_version(&self) -> Result<String, PcanError>;
