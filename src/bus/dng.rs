@@ -1,13 +1,6 @@
 use crate::bus::Bus;
 use crate::channel::Channel;
-use crate::error::{PcanError, PcanOkError};
-use crate::hw_ident::{
-    ChannelCondition, ChannelConditionStatus, ControllerNumber, DevicePartNumber, HardwareName,
-};
-use crate::info::{ChannelFeatures, ChannelVersion, Version};
 use crate::pcan;
-use crate::special::{BitrateAdapting, SetBitrateAdapting};
-use std::os::raw::c_void;
 
 ///
 #[derive(Debug, PartialEq, Copy, Clone)]
