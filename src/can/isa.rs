@@ -2,7 +2,7 @@
 //!
 
 use crate::bus::IsaBus;
-use crate::can::Baudrate;
+use crate::can::{Baudrate, HasCanRead, HasCanReadFd, HasCanWrite, HasCanWriteFd, Socket};
 use crate::error::{PcanError, PcanOkError};
 use crate::pcan;
 
@@ -22,3 +22,35 @@ impl IsaCanSocket {
         }
     }
 }
+
+/* Drop trait implementation */
+
+impl Drop for IsaCanSocket {
+    fn drop(&mut self) {
+        unsafe { pcan::CAN_Uninitialize(self.handle) };
+    }
+}
+
+/* Socket trait implementation */
+
+impl Socket for IsaCanSocket {
+    fn handle(&self) -> u16 {
+        self.handle
+    }
+}
+
+/* HasCanRead trait implementation */
+
+impl HasCanRead for IsaCanSocket {}
+
+/* HasCanReadFd trait implementation */
+
+impl HasCanReadFd for IsaCanSocket {}
+
+/* HasCanWrite trait implementation */
+
+impl HasCanWrite for IsaCanSocket {}
+
+/* HasCanWriteFd trait implementation */
+
+impl HasCanWriteFd for IsaCanSocket {}

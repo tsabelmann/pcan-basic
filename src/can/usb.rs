@@ -3,7 +3,7 @@
 //!
 
 use crate::bus::UsbBus;
-use crate::can::Baudrate;
+use crate::can::{Baudrate, HasCanRead, HasCanReadFd, HasCanWrite, HasCanWriteFd, Socket};
 use crate::error::{PcanError, PcanOkError};
 use crate::pcan;
 
@@ -24,3 +24,35 @@ impl UsbCanSocket {
         }
     }
 }
+
+/* Drop trait implementation */
+
+impl Drop for UsbCanSocket {
+    fn drop(&mut self) {
+        unsafe { pcan::CAN_Uninitialize(self.handle) };
+    }
+}
+
+/* Socket trait implementation */
+
+impl Socket for UsbCanSocket {
+    fn handle(&self) -> u16 {
+        self.handle
+    }
+}
+
+/* HasCanRead trait implementation */
+
+impl HasCanRead for UsbCanSocket {}
+
+/* HasCanReadFd trait implementation */
+
+impl HasCanReadFd for UsbCanSocket {}
+
+/* HasCanWrite trait implementation */
+
+impl HasCanWrite for UsbCanSocket {}
+
+/* HasCanWriteFd trait implementation */
+
+impl HasCanWriteFd for UsbCanSocket {}

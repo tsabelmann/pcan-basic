@@ -3,16 +3,15 @@
 //!
 
 use crate::bus::LanBus;
-use crate::can::Baudrate;
+use crate::can::{Baudrate, HasCanRead, HasCanReadFd, HasCanWrite, HasCanWriteFd, Socket};
 use crate::error::{PcanError, PcanOkError};
 use crate::pcan;
+use std::net::Ipv4Addr;
 
 #[derive(Debug, PartialEq)]
 pub struct LanCanSocket {
     handle: u16,
 }
-
-pub use std::net::Ipv4Addr;
 
 impl LanCanSocket {
     pub fn open(bus: LanBus, baud: Baudrate) -> Result<LanCanSocket, PcanError> {
@@ -26,3 +25,35 @@ impl LanCanSocket {
         }
     }
 }
+
+/* Drop trait implementation */
+
+impl Drop for LanCanSocket {
+    fn drop(&mut self) {
+        unsafe { pcan::CAN_Uninitialize(self.handle) };
+    }
+}
+
+/* Socket trait implementation */
+
+impl Socket for LanCanSocket {
+    fn handle(&self) -> u16 {
+        self.handle
+    }
+}
+
+/* HasCanRead trait implementation */
+
+impl HasCanRead for LanCanSocket {}
+
+/* HasCanReadFd trait implementation */
+
+impl HasCanReadFd for LanCanSocket {}
+
+/* HasCanWrite trait implementation */
+
+impl HasCanWrite for LanCanSocket {}
+
+/* HasCanWriteFd trait implementation */
+
+impl HasCanWriteFd for LanCanSocket {}

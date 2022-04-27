@@ -1,7 +1,7 @@
 //!
 
 use crate::bus::DngBus;
-use crate::can::Baudrate;
+use crate::can::{Baudrate, HasCanRead, HasCanReadFd, HasCanWrite, HasCanWriteFd, Socket};
 use crate::error::{PcanError, PcanOkError};
 use crate::pcan;
 
@@ -22,3 +22,35 @@ impl DngCanSocket {
         }
     }
 }
+
+/* Drop trait implementations */
+
+impl Drop for DngCanSocket {
+    fn drop(&mut self) {
+        unsafe { pcan::CAN_Uninitialize(self.handle) };
+    }
+}
+
+/* Socket trait implementation */
+
+impl Socket for DngCanSocket {
+    fn handle(&self) -> u16 {
+        self.handle
+    }
+}
+
+/* HasCanRead trait implementation */
+
+impl HasCanRead for DngCanSocket {}
+
+/* HasCanReadFd trait implementation */
+
+impl HasCanReadFd for DngCanSocket {}
+
+/* HasCanWrite trait implementation */
+
+impl HasCanWrite for DngCanSocket {}
+
+/* HasCanWriteFd trait implementation */
+
+impl HasCanWriteFd for DngCanSocket {}

@@ -3,7 +3,7 @@
 //!
 
 use crate::bus::PciBus;
-use crate::can::Baudrate;
+use crate::can::{Baudrate, HasCanRead, HasCanReadFd, HasCanWrite, HasCanWriteFd, Socket};
 use crate::error::{PcanError, PcanOkError};
 use crate::pcan;
 
@@ -24,3 +24,35 @@ impl PciCanSocket {
         }
     }
 }
+
+/* Drop trait implementation */
+
+impl Drop for PciCanSocket {
+    fn drop(&mut self) {
+        unsafe { pcan::CAN_Uninitialize(self.handle) };
+    }
+}
+
+/* Socket trait implementation */
+
+impl Socket for PciCanSocket {
+    fn handle(&self) -> u16 {
+        self.handle
+    }
+}
+
+/* HasCanRead trait implementation */
+
+impl HasCanRead for PciCanSocket {}
+
+/* HasCanReadFd trait implementation */
+
+impl HasCanReadFd for PciCanSocket {}
+
+/* HasCanWrite trait implementation */
+
+impl HasCanWrite for PciCanSocket {}
+
+/* HasCanWriteFd trait implementation */
+
+impl HasCanWriteFd for PciCanSocket {}
