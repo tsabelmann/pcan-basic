@@ -7,7 +7,7 @@ use crate::can::{Baudrate, HasCanRead, HasCanReadFd, HasCanWrite, HasCanWriteFd,
 use crate::error::{PcanError, PcanOkError};
 use crate::hw_ident::IpAddress;
 use crate::pcan;
-use crate::special::{BusOffAutoreset, SetBusOffAutoreset};
+use crate::special::{BusOffAutoreset, ListenOnly, SetBusOffAutoreset};
 use std::ffi::c_void;
 use std::net::Ipv4Addr;
 
@@ -140,6 +140,35 @@ impl SetBusOffAutoreset for LanCanSocket {
 
         match PcanOkError::try_from(code) {
             Ok(PcanOkError::Ok) => Ok(()),
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
+/* ListenOnly trait implementation */
+
+impl ListenOnly for LanCanSocket {
+    fn listen_only(&self) -> Result<bool, PcanError> {
+        let mut data = [0u8; 4];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.handle,
+                pcan::PCAN_LISTEN_ONLY as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => {
+                let value = u32::from_le_bytes(data);
+                if value & pcan::PCAN_PARAMETER_ON == pcan::PCAN_PARAMETER_ON {
+                    Ok(true)
+                } else {
+                    Ok(false)
+                }
+            }
             Ok(PcanOkError::Err(err)) => Err(err),
             Err(_) => Err(PcanError::Unknown),
         }
