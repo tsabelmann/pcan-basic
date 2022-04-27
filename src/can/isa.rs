@@ -3,6 +3,7 @@
 
 use crate::bus::IsaBus;
 use crate::can::{Baudrate, HasCanRead, HasCanReadFd, HasCanWrite, HasCanWriteFd, Socket};
+use crate::channel::Channel;
 use crate::error::{PcanError, PcanOkError};
 use crate::pcan;
 use crate::special::{BusOffAutoreset, ListenOnly, SetBusOffAutoreset, SetListenOnly};
@@ -41,6 +42,14 @@ impl Socket for IsaCanSocket {
     }
 }
 
+/* Channel trait implementation */
+
+impl Channel for IsaCanSocket {
+    fn channel(&self) -> u16 {
+        self.handle
+    }
+}
+
 /* HasCanRead trait implementation */
 
 impl HasCanRead for IsaCanSocket {}
@@ -58,107 +67,3 @@ impl HasCanWrite for IsaCanSocket {}
 impl HasCanWriteFd for IsaCanSocket {}
 
 /* SPECIAL BEHAVIOR */
-
-/* BusOffAutoreset trait implementation */
-
-impl BusOffAutoreset for IsaCanSocket {
-    fn bus_off_autoreset(&self) -> Result<bool, PcanError> {
-        let mut data = [0u8; 4];
-        let code = unsafe {
-            pcan::CAN_GetValue(
-                self.handle,
-                pcan::PCAN_BUSOFF_AUTORESET as u8,
-                data.as_mut_ptr() as *mut c_void,
-                data.len() as u32,
-            )
-        };
-
-        match PcanOkError::try_from(code) {
-            Ok(PcanOkError::Ok) => {
-                let value = u32::from_le_bytes(data);
-                if value & pcan::PCAN_PARAMETER_ON == pcan::PCAN_PARAMETER_ON {
-                    Ok(true)
-                } else {
-                    Ok(false)
-                }
-            }
-            Ok(PcanOkError::Err(err)) => Err(err),
-            Err(_) => Err(PcanError::Unknown),
-        }
-    }
-}
-
-impl SetBusOffAutoreset for IsaCanSocket {
-    fn set_bus_off_autoreset(&self, value: bool) -> Result<(), PcanError> {
-        let mut data = match value {
-            true => pcan::PCAN_PARAMETER_ON.to_le_bytes(),
-            false => pcan::PCAN_PARAMETER_OFF.to_le_bytes(),
-        };
-        let code = unsafe {
-            pcan::CAN_SetValue(
-                self.handle,
-                pcan::PCAN_BUSOFF_AUTORESET as u8,
-                data.as_mut_ptr() as *mut c_void,
-                data.len() as u32,
-            )
-        };
-
-        match PcanOkError::try_from(code) {
-            Ok(PcanOkError::Ok) => Ok(()),
-            Ok(PcanOkError::Err(err)) => Err(err),
-            Err(_) => Err(PcanError::Unknown),
-        }
-    }
-}
-
-/* ListenOnly trait implementation */
-
-impl ListenOnly for IsaCanSocket {
-    fn listen_only(&self) -> Result<bool, PcanError> {
-        let mut data = [0u8; 4];
-        let code = unsafe {
-            pcan::CAN_GetValue(
-                self.handle,
-                pcan::PCAN_LISTEN_ONLY as u8,
-                data.as_mut_ptr() as *mut c_void,
-                data.len() as u32,
-            )
-        };
-
-        match PcanOkError::try_from(code) {
-            Ok(PcanOkError::Ok) => {
-                let value = u32::from_le_bytes(data);
-                if value & pcan::PCAN_PARAMETER_ON == pcan::PCAN_PARAMETER_ON {
-                    Ok(true)
-                } else {
-                    Ok(false)
-                }
-            }
-            Ok(PcanOkError::Err(err)) => Err(err),
-            Err(_) => Err(PcanError::Unknown),
-        }
-    }
-}
-
-impl SetListenOnly for IsaCanSocket {
-    fn set_listen_only(&self, value: bool) -> Result<(), PcanError> {
-        let mut data = match value {
-            true => pcan::PCAN_PARAMETER_ON.to_le_bytes(),
-            false => pcan::PCAN_PARAMETER_OFF.to_le_bytes(),
-        };
-        let code = unsafe {
-            pcan::CAN_SetValue(
-                self.handle,
-                pcan::PCAN_LISTEN_ONLY as u8,
-                data.as_mut_ptr() as *mut c_void,
-                data.len() as u32,
-            )
-        };
-
-        match PcanOkError::try_from(code) {
-            Ok(PcanOkError::Ok) => Ok(()),
-            Ok(PcanOkError::Err(err)) => Err(err),
-            Err(_) => Err(PcanError::Unknown),
-        }
-    }
-}
