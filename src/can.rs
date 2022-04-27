@@ -71,19 +71,11 @@ impl CanFrame {
     }
 
     pub fn is_standard_frame(&self) -> bool {
-        if self.frame.MSGTYPE & pcan::PCAN_MESSAGE_STANDARD as u8 != 0 {
-            true
-        } else {
-            false
-        }
+        self.frame.MSGTYPE & pcan::PCAN_MESSAGE_STANDARD as u8 != 0
     }
 
     pub fn is_extended_frame(&self) -> bool {
-        if self.frame.MSGTYPE & pcan::PCAN_MESSAGE_EXTENDED as u8 != 0 {
-            true
-        } else {
-            false
-        }
+        self.frame.MSGTYPE & pcan::PCAN_MESSAGE_EXTENDED as u8 != 0
     }
 
     pub fn can_id(&self) -> u32 {
@@ -179,11 +171,7 @@ impl CanFdFrame {
     }
 
     pub fn is_standard_frame(&self) -> bool {
-        if self.frame.MSGTYPE & pcan::PCAN_MESSAGE_STANDARD as u8 != 0 {
-            true
-        } else {
-            false
-        }
+        self.frame.MSGTYPE & pcan::PCAN_MESSAGE_STANDARD as u8 != 0
     }
 
     pub fn is_extended_frame(&self) -> bool {
