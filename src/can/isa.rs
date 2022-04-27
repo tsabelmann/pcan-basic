@@ -50,20 +50,11 @@ impl Channel for IsaCanSocket {
     }
 }
 
-/* HasCanRead trait implementation */
+/* CAN trait implementations */
 
 impl HasCanRead for IsaCanSocket {}
-
-/* HasCanReadFd trait implementation */
-
 impl HasCanReadFd for IsaCanSocket {}
-
-/* HasCanWrite trait implementation */
-
 impl HasCanWrite for IsaCanSocket {}
-
-/* HasCanWriteFd trait implementation */
-
 impl HasCanWriteFd for IsaCanSocket {}
 
 /* SPECIAL BEHAVIOR */

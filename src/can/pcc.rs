@@ -52,20 +52,13 @@ impl Channel for PccCanSocket {
     }
 }
 
-/* HasCanRead trait implementation */
+/* CAN trait implementations */
 
 impl HasCanRead for PccCanSocket {}
-
-/* HasCanReadFd trait implementation */
-
 impl HasCanReadFd for PccCanSocket {}
-
-/* HasCanWrite trait implementation */
-
 impl HasCanWrite for PccCanSocket {}
-
-/* HasCanWriteFd trait implementation */
-
 impl HasCanWriteFd for PccCanSocket {}
+
+/* HARDWARE IDENTIFICATION */
 
 /* SPECIAL BEHAVIOR */

@@ -56,20 +56,13 @@ impl Channel for PciCanSocket {
     }
 }
 
-/* HasCanRead trait implementation */
+/* CAN trait implementations */
 
 impl HasCanRead for PciCanSocket {}
-
-/* HasCanReadFd trait implementation */
-
 impl HasCanReadFd for PciCanSocket {}
-
-/* HasCanWrite trait implementation */
-
 impl HasCanWrite for PciCanSocket {}
-
-/* HasCanWriteFd trait implementation */
-
 impl HasCanWriteFd for PciCanSocket {}
+
+/* HARDWARE IDENTIFICATION */
 
 /* SPECIAL BEHAVIOR */

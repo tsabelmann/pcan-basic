@@ -51,20 +51,13 @@ impl Channel for DngCanSocket {
     }
 }
 
-/* HasCanRead trait implementation */
+/* CAN trait implementations */
 
 impl HasCanRead for DngCanSocket {}
-
-/* HasCanReadFd trait implementation */
-
 impl HasCanReadFd for DngCanSocket {}
-
-/* HasCanWrite trait implementation */
-
 impl HasCanWrite for DngCanSocket {}
-
-/* HasCanWriteFd trait implementation */
-
 impl HasCanWriteFd for DngCanSocket {}
+
+/* HARDWARE IDENTIFICATION */
 
 /* SPECIAL BEHAVIOR */

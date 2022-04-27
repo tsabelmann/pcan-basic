@@ -54,51 +54,13 @@ impl Channel for LanCanSocket {
     }
 }
 
-/* HasCanRead trait implementation */
+/* CAN trait implementations */
 
 impl HasCanRead for LanCanSocket {}
-
-/* HasCanReadFd trait implementation */
-
 impl HasCanReadFd for LanCanSocket {}
-
-/* HasCanWrite trait implementation */
-
 impl HasCanWrite for LanCanSocket {}
-
-/* HasCanWriteFd trait implementation */
-
 impl HasCanWriteFd for LanCanSocket {}
 
-/* IpAddress trait implementation */
-
-impl IpAddress for LanCanSocket {
-    fn ip_address(&self) -> Result<Ipv4Addr, PcanError> {
-        let mut data = [0u8; 20];
-        let code = unsafe {
-            pcan::CAN_GetValue(
-                self.handle,
-                pcan::PCAN_IP_ADDRESS as u8,
-                data.as_mut_ptr() as *mut c_void,
-                data.len() as u32,
-            )
-        };
-
-        match PcanOkError::try_from(code) {
-            Ok(PcanOkError::Ok) => match std::str::from_utf8(&data) {
-                Ok(s) => {
-                    let s = s.trim_matches(char::from(0));
-                    match s.parse() {
-                        Ok(ip) => Ok(ip),
-                        Err(_) => Err(PcanError::Unknown),
-                    }
-                }
-                Err(_) => Err(PcanError::Unknown),
-            },
-            Ok(PcanOkError::Err(err)) => Err(err),
-            _ => Err(PcanError::Unknown),
-        }
-    }
-}
+/* Hardware Identification */
 
 /* SPECIAL BEHAVIOR */

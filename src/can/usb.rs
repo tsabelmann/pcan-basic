@@ -56,40 +56,25 @@ impl Channel for UsbCanSocket {
     }
 }
 
-/* HasCanRead trait implementation */
+/* CAN trait implementations */
 
 impl HasCanRead for UsbCanSocket {}
-
-/* HasCanReadFd trait implementation */
-
 impl HasCanReadFd for UsbCanSocket {}
-
-/* HasCanWrite trait implementation */
-
 impl HasCanWrite for UsbCanSocket {}
-
-/* HasCanWriteFd trait implementation */
-
 impl HasCanWriteFd for UsbCanSocket {}
 
-/* SPECIAL BEHAVIOR */
+/* HARDWARE IDENTIFICATION */
 
-/* FiveVoltsPower trait implementation */
+/* SPECIAL BEHAVIOR */
 
 impl HasFiveVoltsPower for UsbCanSocket {}
 impl HasSetFiveVoltsPower for UsbCanSocket {}
 
-/* BusOffAutoreset trait implementation */
-
 impl HasBusOffAutoreset for UsbCanSocket {}
 impl HasSetBusOffAutoreset for UsbCanSocket {}
 
-/* ListenOnly trait implementation */
-
 impl HasListenOnly for UsbCanSocket {}
 impl HasSetListenOnly for UsbCanSocket {}
-
-/* InterframeDelay trait implementation */
 
 impl HasInterframeDelay for UsbCanSocket {}
 impl HasSetInterframeDelay for UsbCanSocket {}
