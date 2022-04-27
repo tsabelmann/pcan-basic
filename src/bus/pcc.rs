@@ -7,6 +7,7 @@ use crate::hw_ident::{
 };
 use crate::info::{ChannelFeatures, ChannelVersion, Version};
 use crate::pcan;
+use crate::special::{BitrateAdapting, SetBitrateAdapting};
 
 ///
 #[derive(Debug, PartialEq, Copy, Clone)]
@@ -256,6 +257,60 @@ impl ChannelFeatures for PccBus {
                     Ok(false)
                 }
             }
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
+/* SPECIAL BEHAVIOR */
+
+/* BitrateAdapting trait implementation */
+
+impl BitrateAdapting for PccBus {
+    fn bitrate_adapting(&self) -> Result<bool, PcanError> {
+        let mut data = [0u8; 4];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_BITRATE_ADAPTING as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => {
+                let value = u32::from_le_bytes(data);
+                if value & pcan::PCAN_PARAMETER_ON == pcan::PCAN_PARAMETER_ON {
+                    Ok(true)
+                } else {
+                    Ok(false)
+                }
+            }
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
+impl SetBitrateAdapting for PccBus {
+    fn set_bitrate_adapting(&self, value: bool) -> Result<(), PcanError> {
+        let mut data = match value {
+            true => pcan::PCAN_PARAMETER_ON.to_le_bytes(),
+            false => pcan::PCAN_PARAMETER_OFF.to_le_bytes(),
+        };
+        let code = unsafe {
+            pcan::CAN_SetValue(
+                self.channel(),
+                pcan::PCAN_BITRATE_ADAPTING as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => Ok(()),
             Ok(PcanOkError::Err(err)) => Err(err),
             Err(_) => Err(PcanError::Unknown),
         }
