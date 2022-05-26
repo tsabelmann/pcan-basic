@@ -178,7 +178,31 @@ impl<T: HasChannelFeatures + Channel> ChannelFeatures for T {
 pub(crate) trait HasBitrateInfo {}
 
 pub trait BitrateInfo {
-    fn bitrate_info(&self) -> Result<u16, PcanError>;
+    fn bitrate_info(&self) -> Result<(u16, u16), PcanError>;
+}
+
+impl<T: HasBitrateInfo + Channel> BitrateInfo for T {
+    fn bitrate_info(&self) -> Result<(u16, u16), PcanError> {
+        let mut data = [0u8; 4];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_BITRATE_INFO as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => {
+                let btr0 = u16::from_le_bytes([data[0], data[1]]);
+                let btr1 = u16::from_le_bytes([data[2], data[3]]);
+                Ok((btr0,btr1))
+            }
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
 }
 
 /* BitrateFdInfo trait */
