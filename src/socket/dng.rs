@@ -65,6 +65,6 @@ impl HasHardwareName for DngCanSocket {}
 impl HasControllerNumber for DngCanSocket {}
 impl HasSetControllerNumber for DngCanSocket {}
 
-impl HasDevicePartNumber for DngBus {}
+impl HasDevicePartNumber for DngCanSocket {}
 
 /* SPECIAL BEHAVIOR */
