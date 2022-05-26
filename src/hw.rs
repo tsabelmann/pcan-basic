@@ -79,10 +79,33 @@ impl<T: HasChannelCondition + Bus> ChannelCondition for T {
 pub(crate) trait HasChannelIdentifying {}
 
 pub trait ChannelIdentifying {
+    fn set_channel_identifying(&self, value: bool) -> Result<(), PcanError>;
     fn is_channel_identifying(&self) -> Result<bool, PcanError>;
 }
 
 impl<T: HasChannelIdentifying + Channel> ChannelIdentifying for T {
+    fn set_channel_identifying(&self, value: bool) -> Result<(), PcanError> {
+        let mut data = match value {
+            true => pcan::PCAN_PARAMETER_ON.to_le_bytes(),
+            false => pcan::PCAN_PARAMETER_OFF.to_le_bytes(),
+        };
+
+        let code = unsafe {
+            pcan::CAN_SetValue(
+                self.channel(),
+                pcan::PCAN_CHANNEL_IDENTIFYING as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => Ok(()),
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+
     fn is_channel_identifying(&self) -> Result<bool, PcanError> {
         let mut data = [0u8; 4];
         let code = unsafe {
@@ -103,36 +126,6 @@ impl<T: HasChannelIdentifying + Channel> ChannelIdentifying for T {
                     Ok(false)
                 }
             }
-            Ok(PcanOkError::Err(err)) => Err(err),
-            Err(_) => Err(PcanError::Unknown),
-        }
-    }
-}
-
-pub(crate) trait HasSetChannelIdentifying {}
-
-pub trait SetChannelIdentifying {
-    fn set_channel_identifying(&self, value: bool) -> Result<(), PcanError>;
-}
-
-impl<T: HasSetChannelIdentifying + Channel> SetChannelIdentifying for T {
-    fn set_channel_identifying(&self, value: bool) -> Result<(), PcanError> {
-        let mut data = match value {
-            true => pcan::PCAN_PARAMETER_ON.to_le_bytes(),
-            false => pcan::PCAN_PARAMETER_OFF.to_le_bytes(),
-        };
-
-        let code = unsafe {
-            pcan::CAN_SetValue(
-                self.channel(),
-                pcan::PCAN_CHANNEL_IDENTIFYING as u8,
-                data.as_mut_ptr() as *mut c_void,
-                data.len() as u32,
-            )
-        };
-
-        match PcanOkError::try_from(code) {
-            Ok(PcanOkError::Ok) => Ok(()),
             Ok(PcanOkError::Err(err)) => Err(err),
             Err(_) => Err(PcanError::Unknown),
         }
