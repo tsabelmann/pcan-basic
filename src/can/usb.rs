@@ -6,6 +6,7 @@ use crate::bus::UsbBus;
 use crate::can::{Baudrate, HasCanRead, HasCanReadFd, HasCanWrite, HasCanWriteFd, Socket};
 use crate::channel::Channel;
 use crate::error::{PcanError, PcanOkError};
+use crate::hw_ident::{HasChannelIdentifying, HasSetChannelIdentifying};
 use crate::pcan;
 use crate::special::{
     HasBusOffAutoreset, HasFiveVoltsPower, HasInterframeDelay, HasListenOnly,
@@ -62,6 +63,9 @@ impl HasCanWrite for UsbCanSocket {}
 impl HasCanWriteFd for UsbCanSocket {}
 
 /* HARDWARE IDENTIFICATION */
+
+impl HasChannelIdentifying for UsbCanSocket {}
+impl HasSetChannelIdentifying for UsbCanSocket {}
 
 /* SPECIAL BEHAVIOR */
 
