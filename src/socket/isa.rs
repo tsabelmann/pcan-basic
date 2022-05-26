@@ -7,6 +7,7 @@ use crate::socket::{Baudrate, HasCanRead, HasCanReadFd, HasCanWrite, HasCanWrite
 use crate::channel::Channel;
 use crate::error::{PcanError, PcanOkError};
 use crate::hw::{HasControllerNumber, HasDevicePartNumber, HasHardwareName, HasSetControllerNumber};
+use crate::info::HasChannelVersion;
 use crate::pcan;
 
 #[derive(Debug, PartialEq)]
@@ -65,5 +66,9 @@ impl HasControllerNumber for IsaCanSocket {}
 impl HasSetControllerNumber for IsaCanSocket {}
 
 impl HasDevicePartNumber for IsaCanSocket {}
+
+/* INFORMATIONAL PARAMETER */
+
+impl HasChannelVersion for IsaCanSocket {}
 
 /* SPECIAL BEHAVIOR */
