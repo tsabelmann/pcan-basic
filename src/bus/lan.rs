@@ -1,5 +1,6 @@
 use crate::bus::Bus;
 use crate::channel::Channel;
+use crate::hw::HasChannelCondition;
 use crate::pcan;
 
 ///
@@ -106,5 +107,7 @@ impl Channel for LanBus {
 }
 
 /* HARDWARE IDENTIFICATION */
+
+impl HasChannelCondition for LanBus {}
 
 /* SPECIAL BEHAVIOR */
