@@ -1,6 +1,6 @@
 use crate::bus::Bus;
 use crate::channel::Channel;
-use crate::hw::HasChannelCondition;
+use crate::hw::{HasChannelCondition, HasHardwareName};
 use crate::pcan;
 
 ///
@@ -77,5 +77,7 @@ impl Channel for IsaBus {
 /* HARDWARE IDENTIFICATION */
 
 impl HasChannelCondition for IsaBus {}
+
+impl HasHardwareName for IsaBus {}
 
 /* SPECIAL BEHAVIOR */
