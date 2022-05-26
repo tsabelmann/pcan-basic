@@ -60,7 +60,7 @@ impl HasCanWriteFd for LanCanSocket {}
 
 /* HARDWARE IDENTIFICATION */
 
-impl HasDeviceId for LanBus {}
-impl HasSetDeviceId for LanBus {}
+impl HasDeviceId for LanCanSocket {}
+impl HasSetDeviceId for LanCanSocket {}
 
 /* SPECIAL BEHAVIOR */

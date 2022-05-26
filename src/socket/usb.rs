@@ -66,8 +66,8 @@ impl HasCanWriteFd for UsbCanSocket {}
 
 impl HasChannelIdentifying for UsbCanSocket {}
 
-impl HasDeviceId for UsbBus {}
-impl HasSetDeviceId for UsbBus {}
+impl HasDeviceId for UsbCanSocket {}
+impl HasSetDeviceId for UsbCanSocket {}
 
 /* SPECIAL BEHAVIOR */
 

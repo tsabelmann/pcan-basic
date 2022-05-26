@@ -60,7 +60,7 @@ impl HasCanWriteFd for PciCanSocket {}
 
 /* HARDWARE IDENTIFICATION */
 
-impl HasDeviceId for PciBus {}
-impl HasSetDeviceId for PciBus {}
+impl HasDeviceId for PciCanSocket {}
+impl HasSetDeviceId for PciCanSocket {}
 
 /* SPECIAL BEHAVIOR */
