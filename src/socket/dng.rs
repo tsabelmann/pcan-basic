@@ -6,7 +6,7 @@ use crate::bus::DngBus;
 use crate::socket::{Baudrate, HasCanRead, HasCanReadFd, HasCanWrite, HasCanWriteFd, Socket};
 use crate::channel::Channel;
 use crate::error::{PcanError, PcanOkError};
-use crate::hw::{HasControllerNumber, HasHardwareName};
+use crate::hw::{HasControllerNumber, HasHardwareName, HasSetControllerNumber};
 use crate::pcan;
 
 #[derive(Debug, PartialEq)]
@@ -63,5 +63,6 @@ impl HasCanWriteFd for DngCanSocket {}
 impl HasHardwareName for DngCanSocket {}
 
 impl HasControllerNumber for DngCanSocket {}
+impl HasSetControllerNumber for DngCanSocket {}
 
 /* SPECIAL BEHAVIOR */
