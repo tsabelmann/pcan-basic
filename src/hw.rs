@@ -50,7 +50,7 @@ pub trait ChannelCondition {
     fn channel_condition(&self) -> Result<ChannelConditionStatus, PcanError>;
 }
 
-impl<T: HasChannelCondition + Bus> ChannelCondition for T {
+impl<T: HasChannelCondition + Channel> ChannelCondition for T {
     fn channel_condition(&self) -> Result<ChannelConditionStatus, PcanError> {
         let mut data = [0u8; 4];
         let code = unsafe {
