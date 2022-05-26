@@ -7,6 +7,7 @@ use crate::socket::{Baudrate, HasCanRead, HasCanReadFd, HasCanWrite, HasCanWrite
 use crate::channel::Channel;
 use crate::error::{PcanError, PcanOkError};
 use crate::hw::{HasControllerNumber, HasDeviceId, HasDevicePartNumber, HasHardwareName, HasSetControllerNumber, HasSetDeviceId};
+use crate::info::HasChannelVersion;
 use crate::pcan;
 
 #[derive(Debug, PartialEq)]
@@ -69,5 +70,9 @@ impl HasControllerNumber for PciCanSocket {}
 impl HasSetControllerNumber for PciCanSocket {}
 
 impl HasDevicePartNumber for PciCanSocket {}
+
+/* INFORMATIONAL PARAMETER */
+
+impl HasChannelVersion for PciCanSocket {}
 
 /* SPECIAL BEHAVIOR */
