@@ -7,7 +7,7 @@ use crate::socket::{Baudrate, HasCanRead, HasCanReadFd, HasCanWrite, HasCanWrite
 use crate::channel::Channel;
 use crate::error::{PcanError, PcanOkError};
 use crate::hw::{HasControllerNumber, HasDevicePartNumber, HasHardwareName, HasSetControllerNumber};
-use crate::info::HasChannelVersion;
+use crate::info::{HasChannelFeatures, HasChannelVersion};
 use crate::pcan;
 
 #[derive(Debug, PartialEq)]
@@ -71,5 +71,7 @@ impl HasDevicePartNumber for DngCanSocket {}
 /* INFORMATIONAL PARAMETER */
 
 impl HasChannelVersion for DngCanSocket {}
+
+impl HasChannelFeatures for DngCanSocket {}
 
 /* SPECIAL BEHAVIOR */
