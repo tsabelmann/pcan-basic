@@ -7,7 +7,10 @@ use crate::bus::Bus;
 use crate::error::{PcanError, PcanOkError};
 use crate::pcan;
 use std::ffi::c_void;
+use std::mem::size_of;
 use std::net::Ipv4Addr;
+use std::os::raw::c_char;
+use pcan_basic_sys::TPCANChannelInformation;
 
 #[derive(Debug, PartialEq)]
 pub enum ChannelConditionStatus {
@@ -330,6 +333,65 @@ pub fn attached_channels_count() -> Result<u32, PcanError> {
 
     match PcanOkError::try_from(code) {
         Ok(PcanOkError::Ok) => Ok(u32::from_le_bytes(data)),
+        Ok(PcanOkError::Err(err)) => Err(err),
+        Err(_) => Err(PcanError::Unknown),
+    }
+}
+
+#[derive(Debug)]
+pub struct ChannelInformation {
+    channel_information: pcan::tagTPCANChannelInformation
+}
+
+impl ChannelInformation {
+    pub fn new() -> Self {
+        ChannelInformation {
+            channel_information: pcan::tagTPCANChannelInformation {
+                channel_handle: 0,
+                device_type: 0,
+                controller_number: 0,
+                device_features: 0,
+                device_name: [c_char::default(); 33usize],
+                device_id: 0,
+                channel_condition: 0
+            }
+        }
+    }
+
+    pub fn device_name(&self) -> String {
+        let string = self.channel_information.device_name
+            .as_slice()
+            .iter()
+            .map(|c| char::from(*c as u8))
+            .collect::<Vec<_>>()
+            .as_slice()
+            .iter()
+            .collect::<String>();
+
+        let s = string.trim_matches(char::from(0));
+        String::from(s)
+    }
+}
+
+pub fn attached_channels() -> Result<Vec<ChannelInformation>, PcanError> {
+    let attached_channels_count = attached_channels_count()?;
+    let mut channel_information_list = Vec::new();
+
+    for _ in 0..attached_channels_count {
+        channel_information_list.push(ChannelInformation::new());
+    }
+
+    let code = unsafe {
+        pcan::CAN_GetValue(
+            pcan::PCAN_NONEBUS as u16,
+            pcan::PCAN_ATTACHED_CHANNELS as u8,
+            channel_information_list.as_mut_ptr() as *mut c_void,
+            attached_channels_count * size_of::<pcan::tagTPCANChannelInformation>() as u32
+        )
+    };
+
+    match PcanOkError::try_from(code) {
+        Ok(PcanOkError::Ok) => Ok(channel_information_list),
         Ok(PcanOkError::Err(err)) => Err(err),
         Err(_) => Err(PcanError::Unknown),
     }
