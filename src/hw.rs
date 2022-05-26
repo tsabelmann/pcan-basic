@@ -315,6 +315,26 @@ impl<T: HasIpAddress + Channel> IpAddress for T {
     }
 }
 
+/* ATTACHED CHANNEL COUNT */
+
+pub fn attached_channels_count() -> Result<u32, PcanError> {
+    let mut data = [0u8; 4];
+    let code = unsafe {
+        pcan::CAN_GetValue(
+            pcan::PCAN_NONEBUS as u16,
+            pcan::PCAN_ATTACHED_CHANNELS_COUNT as u8,
+            data.as_mut_ptr() as *mut c_void,
+            data.len() as u32,
+        )
+    };
+
+    match PcanOkError::try_from(code) {
+        Ok(PcanOkError::Ok) => Ok(u32::from_le_bytes(data)),
+        Ok(PcanOkError::Err(err)) => Err(err),
+        Err(_) => Err(PcanError::Unknown),
+    }
+}
+
 /* DevicePartNumber trait */
 
 pub(crate) trait HasDevicePartNumber {}
