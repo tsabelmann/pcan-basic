@@ -6,7 +6,7 @@ use crate::bus::PccBus;
 use crate::socket::{Baudrate, HasCanRead, HasCanReadFd, HasCanWrite, HasCanWriteFd, Socket};
 use crate::channel::Channel;
 use crate::error::{PcanError, PcanOkError};
-use crate::hw::HasHardwareName;
+use crate::hw::{HasControllerNumber, HasHardwareName};
 use crate::pcan;
 
 #[derive(Debug, PartialEq)]
@@ -61,5 +61,7 @@ impl HasCanWriteFd for PccCanSocket {}
 /* HARDWARE IDENTIFICATION */
 
 impl HasHardwareName for PccCanSocket {}
+
+impl HasControllerNumber for PccCanSocket {}
 
 /* SPECIAL BEHAVIOR */
