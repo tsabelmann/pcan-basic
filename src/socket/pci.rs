@@ -3,9 +3,10 @@
 //!
 
 use crate::bus::PciBus;
-use crate::can::{Baudrate, HasCanRead, HasCanReadFd, HasCanWrite, HasCanWriteFd, Socket};
+use crate::socket::{Baudrate, HasCanRead, HasCanReadFd, HasCanWrite, HasCanWriteFd, Socket};
 use crate::channel::Channel;
 use crate::error::{PcanError, PcanOkError};
+use crate::hw::{HasDeviceId, HasSetDeviceId};
 use crate::pcan;
 
 #[derive(Debug, PartialEq)]
@@ -58,5 +59,8 @@ impl HasCanWrite for PciCanSocket {}
 impl HasCanWriteFd for PciCanSocket {}
 
 /* HARDWARE IDENTIFICATION */
+
+impl HasDeviceId for PciBus {}
+impl HasSetDeviceId for PciBus {}
 
 /* SPECIAL BEHAVIOR */
