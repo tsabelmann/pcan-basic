@@ -6,7 +6,7 @@ use crate::bus::UsbBus;
 use crate::can::{Baudrate, HasCanRead, HasCanReadFd, HasCanWrite, HasCanWriteFd, Socket};
 use crate::channel::Channel;
 use crate::error::{PcanError, PcanOkError};
-use crate::hw_ident::{HasChannelIdentifying, HasSetChannelIdentifying};
+use crate::hw::{HasChannelIdentifying, HasSetChannelIdentifying};
 use crate::pcan;
 use crate::special::{
     HasBusOffAutoreset, HasFiveVoltsPower, HasInterframeDelay, HasListenOnly,
