@@ -6,7 +6,7 @@ use crate::bus::IsaBus;
 use crate::socket::{Baudrate, HasCanRead, HasCanReadFd, HasCanWrite, HasCanWriteFd, Socket};
 use crate::channel::Channel;
 use crate::error::{PcanError, PcanOkError};
-use crate::hw::HasHardwareName;
+use crate::hw::{HasControllerNumber, HasHardwareName};
 use crate::pcan;
 
 #[derive(Debug, PartialEq)]
@@ -60,5 +60,7 @@ impl HasCanWriteFd for IsaCanSocket {}
 /* HARDWARE IDENTIFICATION */
 
 impl HasHardwareName for IsaCanSocket {}
+
+impl HasControllerNumber for IsaCanSocket {}
 
 /* SPECIAL BEHAVIOR */
