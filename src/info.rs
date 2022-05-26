@@ -6,6 +6,7 @@ use crate::error::{PcanError, PcanOkError};
 use crate::pcan;
 use std::ffi::c_void;
 
+
 pub fn api_version() -> Result<String, PcanError> {
     let mut data = [0u8; pcan::MAX_LENGTH_VERSION_STRING as usize];
     let code = unsafe {
@@ -33,7 +34,6 @@ pub fn api_version() -> Result<String, PcanError> {
 #[derive(Debug, PartialEq, Clone)]
 pub struct Version {
     pub device_driver_name_and_version: String,
-    pub architecture: String,
     pub year_of_copyright: String,
     pub company_name_and_city: String,
 }
@@ -62,7 +62,8 @@ impl<T: HasChannelVersion + Channel> ChannelVersion for T {
             Ok(PcanOkError::Ok) => match std::str::from_utf8(&data) {
                 Ok(s) => {
                     let newlines = s.lines().collect::<Vec<_>>();
-                    if newlines.len() == 4 {
+
+                    if newlines.len() == 3 {
                         let newlines = newlines
                             .iter()
                             .map(|s| s.trim_matches(char::from(0)))
@@ -70,9 +71,8 @@ impl<T: HasChannelVersion + Channel> ChannelVersion for T {
 
                         Ok(Version {
                             device_driver_name_and_version: String::from(newlines[0]),
-                            architecture: String::from(newlines[1]),
-                            year_of_copyright: String::from(newlines[2]),
-                            company_name_and_city: String::from(newlines[4]),
+                            year_of_copyright: String::from(newlines[1]),
+                            company_name_and_city: String::from(newlines[2]),
                         })
                     } else {
                         Err(PcanError::Unknown)
