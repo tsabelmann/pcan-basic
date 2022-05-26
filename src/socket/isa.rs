@@ -3,9 +3,10 @@
 //!
 
 use crate::bus::IsaBus;
-use crate::can::{Baudrate, HasCanRead, HasCanReadFd, HasCanWrite, HasCanWriteFd, Socket};
+use crate::socket::{Baudrate, HasCanRead, HasCanReadFd, HasCanWrite, HasCanWriteFd, Socket};
 use crate::channel::Channel;
 use crate::error::{PcanError, PcanOkError};
+use crate::hw::HasHardwareName;
 use crate::pcan;
 
 #[derive(Debug, PartialEq)]
@@ -55,5 +56,9 @@ impl HasCanRead for IsaCanSocket {}
 impl HasCanReadFd for IsaCanSocket {}
 impl HasCanWrite for IsaCanSocket {}
 impl HasCanWriteFd for IsaCanSocket {}
+
+/* HARDWARE IDENTIFICATION */
+
+impl HasHardwareName for IsaCanSocket {}
 
 /* SPECIAL BEHAVIOR */
