@@ -114,12 +114,13 @@ pub trait SetChannelIdentifying {
     fn set_channel_identifying(&self, value: bool) -> Result<(), PcanError>;
 }
 
-impl<T: SetChannelIdentifying + Channel> SetChannelIdentifying for T {
+impl<T: HasSetChannelIdentifying + Channel> SetChannelIdentifying for T {
     fn set_channel_identifying(&self, value: bool) -> Result<(), PcanError> {
         let mut data = match value {
             true => pcan::PCAN_PARAMETER_ON.to_le_bytes(),
             false => pcan::PCAN_PARAMETER_OFF.to_le_bytes(),
         };
+
         let code = unsafe {
             pcan::CAN_SetValue(
                 self.channel(),
