@@ -3,6 +3,7 @@
 //!
 
 use crate::channel::Channel;
+use crate::bus::Bus;
 use crate::error::{PcanError, PcanOkError};
 use crate::pcan;
 use std::ffi::c_void;
@@ -49,7 +50,7 @@ pub trait ChannelCondition {
     fn channel_condition(&self) -> Result<ChannelConditionStatus, PcanError>;
 }
 
-impl<T: HasChannelCondition + Channel> ChannelCondition for T {
+impl<T: HasChannelCondition + Bus> ChannelCondition for T {
     fn channel_condition(&self) -> Result<ChannelConditionStatus, PcanError> {
         let mut data = [0u8; 4];
         let code = unsafe {
