@@ -1,6 +1,6 @@
 use crate::bus::Bus;
 use crate::channel::Channel;
-use crate::hw::{HasChannelCondition, HasChannelIdentifying, HasDeviceId, HasHardwareName};
+use crate::hw::{HasChannelCondition, HasChannelIdentifying, HasControllerNumber, HasDeviceId, HasHardwareName};
 use crate::pcan;
 
 ///
@@ -115,6 +115,8 @@ impl HasChannelIdentifying for UsbBus {}
 impl HasDeviceId for UsbBus {}
 
 impl HasHardwareName for UsbBus {}
+
+impl HasControllerNumber for UsbBus {}
 
 /* INFORMATIONAL PARAMETERS */
 
