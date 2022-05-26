@@ -1,6 +1,6 @@
 use crate::bus::Bus;
 use crate::channel::Channel;
-use crate::hw::HasChannelCondition;
+use crate::hw::{HasChannelCondition, HasDeviceId};
 use crate::pcan;
 
 ///
@@ -109,5 +109,7 @@ impl Channel for PciBus {
 /* HARDWARE IDENTIFICATION */
 
 impl HasChannelCondition for PciBus {}
+
+impl HasDeviceId for PciBus {}
 
 /* SPECIAL BEHAVIOR */
