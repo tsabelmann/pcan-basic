@@ -1,6 +1,7 @@
 use crate::bus::Bus;
 use crate::channel::Channel;
 use crate::hw::{HasChannelCondition, HasControllerNumber, HasDevicePartNumber, HasHardwareName};
+use crate::info::HasChannelVersion;
 use crate::pcan;
 
 ///
@@ -55,5 +56,9 @@ impl HasHardwareName for DngBus {}
 impl HasControllerNumber for DngBus {}
 
 impl HasDevicePartNumber for DngBus {}
+
+/* INFORMATIONAL PARAMETERS */
+
+impl HasChannelVersion for DngBus {}
 
 /* SPECIAL BEHAVIOR */
