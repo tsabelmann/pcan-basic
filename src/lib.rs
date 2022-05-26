@@ -3,10 +3,10 @@
 
 #[warn(dead_code)]
 pub mod bus;
-pub mod can;
+pub mod socket;
 mod channel;
 pub mod error;
-pub mod hw_ident;
+pub mod hw;
 pub mod info;
 pub mod special;
 
