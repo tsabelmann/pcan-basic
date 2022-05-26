@@ -6,7 +6,7 @@ use crate::bus::LanBus;
 use crate::socket::{Baudrate, HasCanRead, HasCanReadFd, HasCanWrite, HasCanWriteFd, Socket};
 use crate::channel::Channel;
 use crate::error::{PcanError, PcanOkError};
-use crate::hw::{HasControllerNumber, HasDeviceId, HasHardwareName, HasIpAddress, HasSetControllerNumber, HasSetDeviceId};
+use crate::hw::{HasControllerNumber, HasDeviceId, HasDevicePartNumber, HasHardwareName, HasIpAddress, HasSetControllerNumber, HasSetDeviceId};
 use crate::pcan;
 
 #[derive(Debug, PartialEq)]
@@ -69,5 +69,7 @@ impl HasControllerNumber for LanCanSocket {}
 impl HasSetControllerNumber for LanCanSocket {}
 
 impl HasIpAddress for LanCanSocket {}
+
+impl HasDevicePartNumber for LanCanSocket {}
 
 /* SPECIAL BEHAVIOR */
