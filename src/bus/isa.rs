@@ -1,7 +1,7 @@
 use crate::bus::Bus;
 use crate::channel::Channel;
 use crate::hw::{HasChannelCondition, HasControllerNumber, HasDevicePartNumber, HasHardwareName};
-use crate::info::HasChannelVersion;
+use crate::info::{HasChannelFeatures, HasChannelVersion};
 use crate::pcan;
 
 ///
@@ -88,5 +88,7 @@ impl HasDevicePartNumber for IsaBus {}
 /* INFORMATIONAL PARAMETERS */
 
 impl HasChannelVersion for IsaBus {}
+
+impl HasChannelFeatures for IsaBus {}
 
 /* SPECIAL BEHAVIOR */
