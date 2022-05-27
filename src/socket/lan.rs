@@ -5,9 +5,9 @@
 use crate::bus::LanBus;
 use crate::channel::Channel;
 use crate::df::{
-    HasAllowErrorFrames, HasAllowRTRFrames, HasAllowStatusFrames, HasMessageFilter,
-    HasReceiveStatus, HasSetAllowErrorFrames, HasSetAllowRTRFrames, HasSetAllowStatusFrames,
-    HasSetMessageFilter, HasSetReceiveStatus,
+    HasAllowEchoFrames, HasAllowErrorFrames, HasAllowRTRFrames, HasAllowStatusFrames,
+    HasMessageFilter, HasReceiveStatus, HasSetAllowEchoFrames, HasSetAllowErrorFrames,
+    HasSetAllowRTRFrames, HasSetAllowStatusFrames, HasSetMessageFilter, HasSetReceiveStatus,
 };
 use crate::error::{PcanError, PcanOkError};
 use crate::hw::{
@@ -116,3 +116,6 @@ impl HasSetAllowRTRFrames for LanCanSocket {}
 
 impl HasAllowErrorFrames for LanCanSocket {}
 impl HasSetAllowErrorFrames for LanCanSocket {}
+
+impl HasAllowEchoFrames for LanCanSocket {}
+impl HasSetAllowEchoFrames for LanCanSocket {}
