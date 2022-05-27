@@ -6,6 +6,7 @@ use crate::channel::Channel;
 use crate::error::{PcanError, PcanOkError};
 use crate::pcan;
 use std::ffi::c_void;
+use std::ops::BitXor;
 
 /* MessageFilter traits */
 
@@ -177,7 +178,7 @@ impl<T: HasSetReceiveStatus + Channel> SetReceiveStatus for T {
     }
 }
 
-/* ALLOW STATUS FRAMES traits*/
+/* ALLOW STATUS FRAMES traits */
 
 pub(crate) trait HasAllowStatusFrames {}
 
@@ -243,7 +244,7 @@ impl<T: HasSetAllowStatusFrames + Channel> SetAllowStatusFrames for T {
     }
 }
 
-/* ALLOW RTS FRAMES traits*/
+/* ALLOW RTS FRAMES traits */
 
 pub(crate) trait HasAllowRTRFrames {}
 
@@ -309,7 +310,7 @@ impl<T: HasSetAllowRTRFrames + Channel> SetAllowRTRFrames for T {
     }
 }
 
-/* ALLOW ERROR FRAMES traits*/
+/* ALLOW ERROR FRAMES traits */
 
 pub(crate) trait HasAllowErrorFrames {}
 
@@ -375,7 +376,7 @@ impl<T: HasSetAllowErrorFrames + Channel> SetAllowErrorFrames for T {
     }
 }
 
-/* ALLOW ECHO FRAMES traits*/
+/* ALLOW ECHO FRAMES traits */
 
 pub(crate) trait HasAllowEchoFrames {}
 
@@ -428,6 +429,82 @@ impl<T: HasSetAllowEchoFrames + Channel> SetAllowEchoFrames for T {
             pcan::CAN_SetValue(
                 self.channel(),
                 pcan::PCAN_ALLOW_ECHO_FRAMES as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => Ok(()),
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
+/* ACCEPTANCE FILTER 11Bit traits */
+
+pub(crate) trait HasAcceptanceFilter11Bit {}
+
+pub trait AcceptanceFilter11Bit {
+    fn acceptance_filter_11bit(&self) -> Result<(u32, u32), PcanError>;
+}
+
+impl<T: HasAcceptanceFilter11Bit + Channel> AcceptanceFilter11Bit for T {
+    fn acceptance_filter_11bit(&self) -> Result<(u32, u32), PcanError> {
+        let mut data = [0u8; 8];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_ACCEPTANCE_FILTER_11BIT as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => {
+                let acceptance_mask = u32::from_le_bytes([data[0], data[1], data[2], data[3]]);
+                let acceptance_code = u32::from_le_bytes([data[4], data[5], data[6], data[7]]);
+                Ok((acceptance_code, acceptance_mask))
+            }
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
+pub(crate) trait HasSetAcceptanceFilter11Bit {}
+
+pub trait SetAcceptanceFilter11Bit {
+    fn set_acceptance_filter_11bit(&self, ids: &[u32]) -> Result<(), PcanError>;
+}
+
+impl<T: HasSetAcceptanceFilter11Bit + Channel> SetAcceptanceFilter11Bit for T {
+    fn set_acceptance_filter_11bit(&self, ids: &[u32]) -> Result<(), PcanError> {
+        let acceptance_code = ids
+            .iter()
+            .map(|x| *x & 0x7_FFu32)
+            .fold(0xFF_FF_FF_FFu32, |x, y| x & y);
+        let acceptance_code_data = acceptance_code.to_le_bytes();
+
+        let acceptance_mask = ids.iter().map(|x| *x & 0x7_FFu32).fold(0u32, |x, y| x ^ y);
+        let acceptance_mask_data = acceptance_mask.to_le_bytes();
+
+        let mut data = [
+            acceptance_mask_data[0],
+            acceptance_mask_data[1],
+            acceptance_mask_data[2],
+            acceptance_mask_data[3],
+            acceptance_code_data[0],
+            acceptance_code_data[1],
+            acceptance_code_data[2],
+            acceptance_code_data[3],
+        ];
+        let code = unsafe {
+            pcan::CAN_SetValue(
+                self.channel(),
+                pcan::PCAN_ACCEPTANCE_FILTER_11BIT as u8,
                 data.as_mut_ptr() as *mut c_void,
                 data.len() as u32,
             )
