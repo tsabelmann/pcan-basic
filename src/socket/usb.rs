@@ -4,7 +4,10 @@
 
 use crate::bus::UsbBus;
 use crate::channel::Channel;
-use crate::df::{HasMessageFilter, HasReceiveStatus, HasSetMessageFilter, HasSetReceiveStatus};
+use crate::df::{
+    HasAllowStatusFrames, HasMessageFilter, HasReceiveStatus, HasSetAllowStatusFrames,
+    HasSetMessageFilter, HasSetReceiveStatus,
+};
 use crate::error::{PcanError, PcanOkError};
 use crate::hw::{
     HasChannelIdentifying, HasControllerNumber, HasDeviceId, HasDevicePartNumber, HasHardwareName,
@@ -119,3 +122,6 @@ impl HasSetMessageFilter for UsbCanSocket {}
 
 impl HasReceiveStatus for UsbCanSocket {}
 impl HasSetReceiveStatus for UsbCanSocket {}
+
+impl HasAllowStatusFrames for UsbCanSocket {}
+impl HasSetAllowStatusFrames for UsbCanSocket {}
