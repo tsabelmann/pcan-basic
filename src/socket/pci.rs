@@ -5,9 +5,9 @@
 use crate::bus::PciBus;
 use crate::channel::Channel;
 use crate::df::{
-    HasAllowErrorFrames, HasAllowRTRFrames, HasAllowStatusFrames, HasMessageFilter,
-    HasReceiveStatus, HasSetAllowErrorFrames, HasSetAllowRTRFrames, HasSetAllowStatusFrames,
-    HasSetMessageFilter, HasSetReceiveStatus,
+    HasAllowEchoFrames, HasAllowErrorFrames, HasAllowRTRFrames, HasAllowStatusFrames,
+    HasMessageFilter, HasReceiveStatus, HasSetAllowEchoFrames, HasSetAllowErrorFrames,
+    HasSetAllowRTRFrames, HasSetAllowStatusFrames, HasSetMessageFilter, HasSetReceiveStatus,
 };
 use crate::error::{PcanError, PcanOkError};
 use crate::hw::{
@@ -114,3 +114,6 @@ impl HasSetAllowRTRFrames for PciCanSocket {}
 
 impl HasAllowErrorFrames for PciCanSocket {}
 impl HasSetAllowErrorFrames for PciCanSocket {}
+
+impl HasAllowEchoFrames for PciCanSocket {}
+impl HasSetAllowEchoFrames for PciCanSocket {}
