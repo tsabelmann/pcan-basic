@@ -9,9 +9,7 @@ use crate::hw::{
     HasControllerNumber, HasDeviceId, HasDevicePartNumber, HasHardwareName, HasIpAddress,
     HasSetControllerNumber, HasSetDeviceId,
 };
-use crate::info::{
-    HasBitrateInfo, HasChannelFeatures, HasChannelVersion, HasDataBusSpeed, HasNominalBusSpeed,
-};
+use crate::info::{HasBitrateInfo, HasChannelFeatures, HasChannelVersion, HasDataBusSpeed, HasFirmwareVersion, HasNominalBusSpeed};
 use crate::pcan;
 use crate::socket::{Baudrate, HasCanRead, HasCanReadFd, HasCanWrite, HasCanWriteFd, Socket};
 
@@ -89,5 +87,7 @@ impl HasBitrateInfo for LanCanSocket {}
 impl HasNominalBusSpeed for LanCanSocket {}
 
 impl HasDataBusSpeed for LanCanSocket {}
+
+impl HasFirmwareVersion for LanCanSocket {}
 
 /* SPECIAL BEHAVIOR */
