@@ -6,7 +6,6 @@ use crate::error::{PcanError, PcanOkError};
 use crate::pcan;
 use std::ffi::c_void;
 
-
 pub fn api_version() -> Result<String, PcanError> {
     let mut data = [0u8; pcan::MAX_LENGTH_VERSION_STRING as usize];
     let code = unsafe {
@@ -197,7 +196,7 @@ impl<T: HasBitrateInfo + Channel> BitrateInfo for T {
             Ok(PcanOkError::Ok) => {
                 let btr0 = u16::from_le_bytes([data[0], data[1]]);
                 let btr1 = u16::from_le_bytes([data[2], data[3]]);
-                Ok((btr0,btr1))
+                Ok((btr0, btr1))
             }
             Ok(PcanOkError::Err(err)) => Err(err),
             Err(_) => Err(PcanError::Unknown),
@@ -239,7 +238,6 @@ impl<T: HasBitrateInfoFd + Channel> BitrateInfoFd for T {
     }
 }
 
-
 /* NominalBusSpeed trait */
 
 pub(crate) trait HasNominalBusSpeed {}
@@ -261,9 +259,7 @@ impl<T: HasNominalBusSpeed + Channel> NominalBusSpeed for T {
         };
 
         match PcanOkError::try_from(code) {
-            Ok(PcanOkError::Ok) => {
-                Ok(u32::from_le_bytes(data))
-            }
+            Ok(PcanOkError::Ok) => Ok(u32::from_le_bytes(data)),
             Ok(PcanOkError::Err(err)) => Err(err),
             Err(_) => Err(PcanError::Unknown),
         }
@@ -291,40 +287,62 @@ impl<T: HasDataBusSpeed + Channel> DataBusSpeed for T {
         };
 
         match PcanOkError::try_from(code) {
-            Ok(PcanOkError::Ok) => {
-                Ok(u32::from_le_bytes(data))
-            }
+            Ok(PcanOkError::Ok) => Ok(u32::from_le_bytes(data)),
             Ok(PcanOkError::Err(err)) => Err(err),
             Err(_) => Err(PcanError::Unknown),
         }
     }
 }
 
-// pub fn lan_service_running() -> Result<String, PcanError> {
-//     let mut data = [0u8; pcan::MAX_LENGTH_VERSION_STRING as usize];
-//     let code = unsafe {
-//         pcan::CAN_GetValue(
-//             pcan::PCAN_NONEBUS as u16,
-//             pcan_basic_sys::PCAN_API_VERSION as u8,
-//             data.as_mut_ptr() as *mut c_void,
-//             data.len() as u32,
-//         )
-//     };
-//
-//     match PcanOkError::try_from(code) {
-//         Ok(PcanOkError::Ok) => match std::str::from_utf8(&data) {
-//             Ok(s) => {
-//                 let s = s.trim_matches(char::from(0));
-//                 Ok(String::from(s))
-//             }
-//             Err(_) => Err(PcanError::Unknown),
-//         },
-//         Ok(PcanOkError::Err(err)) => Err(err),
-//         Err(_) => Err(PcanError::Unknown),
-//     }
-// }
+pub fn lan_service_is_running() -> Result<bool, PcanError> {
+    let mut data = [0u8; 4];
+    let code = unsafe {
+        pcan::CAN_GetValue(
+            pcan::PCAN_NONEBUS as u16,
+            pcan::PCAN_LAN_SERVICE_STATUS as u8,
+            data.as_mut_ptr() as *mut c_void,
+            data.len() as u32,
+        )
+    };
 
-// pub fn lan_service_not_running() -> Result<bool, PcanError>
+    match PcanOkError::try_from(code) {
+        Ok(PcanOkError::Ok) => {
+            let code = u32::from_le_bytes(data);
+            if code & pcan::SERVICE_STATUS_RUNNING == pcan::SERVICE_STATUS_RUNNING {
+                Ok(true)
+            } else {
+                Ok(false)
+            }
+        }
+        Ok(PcanOkError::Err(err)) => Err(err),
+        Err(_) => Err(PcanError::Unknown),
+    }
+}
+
+pub fn lan_service_is_stopped() -> Result<bool, PcanError> {
+    let mut data = [0u8; 4];
+    let code = unsafe {
+        pcan::CAN_GetValue(
+            pcan::PCAN_NONEBUS as u16,
+            pcan::PCAN_LAN_SERVICE_STATUS as u8,
+            data.as_mut_ptr() as *mut c_void,
+            data.len() as u32,
+        )
+    };
+
+    match PcanOkError::try_from(code) {
+        Ok(PcanOkError::Ok) => {
+            let code = u32::from_le_bytes(data);
+            if code & pcan::SERVICE_STATUS_STOPPED == pcan::SERVICE_STATUS_STOPPED {
+                Ok(true)
+            } else {
+                Ok(false)
+            }
+        }
+        Ok(PcanOkError::Err(err)) => Err(err),
+        Err(_) => Err(PcanError::Unknown),
+    }
+}
 
 /* FirmwareVersion trait */
 
