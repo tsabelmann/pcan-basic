@@ -4,7 +4,10 @@
 
 use crate::bus::IsaBus;
 use crate::channel::Channel;
-use crate::df::{HasMessageFilter, HasReceiveStatus, HasSetMessageFilter, HasSetReceiveStatus};
+use crate::df::{
+    HasAllowStatusFrames, HasMessageFilter, HasReceiveStatus, HasSetAllowStatusFrames,
+    HasSetMessageFilter, HasSetReceiveStatus,
+};
 use crate::error::{PcanError, PcanOkError};
 use crate::hw::{
     HasControllerNumber, HasDevicePartNumber, HasHardwareName, HasSetControllerNumber,
@@ -96,3 +99,6 @@ impl HasSetMessageFilter for IsaCanSocket {}
 
 impl HasReceiveStatus for IsaCanSocket {}
 impl HasSetReceiveStatus for IsaCanSocket {}
+
+impl HasAllowStatusFrames for IsaCanSocket {}
+impl HasSetAllowStatusFrames for IsaCanSocket {}
