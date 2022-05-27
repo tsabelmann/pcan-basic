@@ -14,6 +14,7 @@ use crate::info::{
 };
 use crate::pcan;
 use crate::socket::{Baudrate, HasCanRead, HasCanReadFd, HasCanWrite, HasCanWriteFd, Socket};
+use crate::special::{HasFiveVoltsPower, HasSetFiveVoltsPower};
 
 #[derive(Debug, PartialEq)]
 pub struct PccCanSocket {
@@ -88,3 +89,6 @@ impl HasDataBusSpeed for PccCanSocket {}
 impl HasFirmwareVersion for PccCanSocket {}
 
 /* SPECIAL BEHAVIOR */
+
+impl HasFiveVoltsPower for PccCanSocket {}
+impl HasSetFiveVoltsPower for PccCanSocket {}
