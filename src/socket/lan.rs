@@ -4,7 +4,7 @@
 
 use crate::bus::LanBus;
 use crate::channel::Channel;
-use crate::df::{HasMessageFilter, HasSetMessageFilter};
+use crate::df::{HasMessageFilter, HasReceiveStatus, HasSetMessageFilter, HasSetReceiveStatus};
 use crate::error::{PcanError, PcanOkError};
 use crate::hw::{
     HasControllerNumber, HasDeviceId, HasDevicePartNumber, HasHardwareName, HasIpAddress,
@@ -100,3 +100,6 @@ impl HasFirmwareVersion for LanCanSocket {}
 
 impl HasMessageFilter for LanCanSocket {}
 impl HasSetMessageFilter for LanCanSocket {}
+
+impl HasReceiveStatus for LanCanSocket {}
+impl HasSetReceiveStatus for LanCanSocket {}
