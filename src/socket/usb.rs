@@ -4,6 +4,7 @@
 
 use crate::bus::UsbBus;
 use crate::channel::Channel;
+use crate::df::{HasMessageFilter, HasSetMessageFilter};
 use crate::error::{PcanError, PcanOkError};
 use crate::hw::{
     HasChannelIdentifying, HasControllerNumber, HasDeviceId, HasDevicePartNumber, HasHardwareName,
@@ -110,3 +111,8 @@ impl HasSetListenOnly for UsbCanSocket {}
 
 impl HasInterframeDelay for UsbCanSocket {}
 impl HasSetInterframeDelay for UsbCanSocket {}
+
+/* CONTROLLING DATA FLOW */
+
+impl HasMessageFilter for UsbCanSocket {}
+impl HasSetMessageFilter for UsbCanSocket {}
