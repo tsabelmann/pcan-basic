@@ -278,6 +278,28 @@ pub trait DataBusSpeed {
     fn data_bus_speed(&self) -> Result<u32, PcanError>;
 }
 
+impl<T: HasDataBusSpeed + Channel> DataBusSpeed for T {
+    fn data_bus_speed(&self) -> Result<u32, PcanError> {
+        let mut data = [0u8; 4];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_BUSSPEED_DATA as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => {
+                Ok(u32::from_le_bytes(data))
+            }
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
 // pub fn lan_service_running() -> Result<String, PcanError> {
 //     let mut data = [0u8; pcan::MAX_LENGTH_VERSION_STRING as usize];
 //     let code = unsafe {
