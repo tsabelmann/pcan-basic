@@ -1,5 +1,6 @@
 use crate::bus::Bus;
 use crate::channel::Channel;
+use crate::df::{HasReceiveStatus, HasSetReceiveStatus};
 use crate::hw::{HasChannelCondition, HasControllerNumber, HasDevicePartNumber, HasHardwareName};
 use crate::info::{HasBitrateInfo, HasBitrateInfoFd, HasChannelFeatures, HasChannelVersion};
 use crate::pcan;
@@ -68,3 +69,8 @@ impl HasBitrateInfo for DngBus {}
 impl HasBitrateInfoFd for DngBus {}
 
 /* SPECIAL BEHAVIOR */
+
+/* CONTROLLING DATA FLOW */
+
+impl HasReceiveStatus for DngBus {}
+impl HasSetReceiveStatus for DngBus {}
