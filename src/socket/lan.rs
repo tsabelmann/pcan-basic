@@ -4,12 +4,16 @@
 
 use crate::bus::LanBus;
 use crate::channel::Channel;
+use crate::df::{HasMessageFilter, HasSetMessageFilter};
 use crate::error::{PcanError, PcanOkError};
 use crate::hw::{
     HasControllerNumber, HasDeviceId, HasDevicePartNumber, HasHardwareName, HasIpAddress,
     HasSetControllerNumber, HasSetDeviceId,
 };
-use crate::info::{HasBitrateInfo, HasChannelFeatures, HasChannelVersion, HasDataBusSpeed, HasFirmwareVersion, HasNominalBusSpeed};
+use crate::info::{
+    HasBitrateInfo, HasChannelFeatures, HasChannelVersion, HasDataBusSpeed, HasFirmwareVersion,
+    HasNominalBusSpeed,
+};
 use crate::pcan;
 use crate::socket::{Baudrate, HasCanRead, HasCanReadFd, HasCanWrite, HasCanWriteFd, Socket};
 
@@ -91,3 +95,8 @@ impl HasDataBusSpeed for LanCanSocket {}
 impl HasFirmwareVersion for LanCanSocket {}
 
 /* SPECIAL BEHAVIOR */
+
+/* CONTROLLING DATA FLOW */
+
+impl HasMessageFilter for LanCanSocket {}
+impl HasSetMessageFilter for LanCanSocket {}
