@@ -1,7 +1,7 @@
 use crate::bus::Bus;
 use crate::channel::Channel;
 use crate::hw::{HasChannelCondition, HasControllerNumber, HasDeviceId, HasDevicePartNumber, HasHardwareName};
-use crate::info::{HasBitrateInfo, HasChannelFeatures, HasChannelVersion};
+use crate::info::{HasBitrateInfo, HasBitrateInfoFd, HasChannelFeatures, HasChannelVersion};
 use crate::pcan;
 
 ///
@@ -126,5 +126,7 @@ impl HasChannelVersion for PciBus {}
 impl HasChannelFeatures for PciBus {}
 
 impl HasBitrateInfo for PciBus {}
+
+impl HasBitrateInfoFd for PciBus {}
 
 /* SPECIAL BEHAVIOR */
