@@ -4,7 +4,7 @@
 
 use crate::bus::PccBus;
 use crate::channel::Channel;
-use crate::df::{HasMessageFilter, HasSetMessageFilter};
+use crate::df::{HasMessageFilter, HasReceiveStatus, HasSetMessageFilter, HasSetReceiveStatus};
 use crate::error::{PcanError, PcanOkError};
 use crate::hw::{
     HasControllerNumber, HasDevicePartNumber, HasHardwareName, HasSetControllerNumber,
@@ -98,3 +98,6 @@ impl HasSetFiveVoltsPower for PccCanSocket {}
 
 impl HasMessageFilter for PccCanSocket {}
 impl HasSetMessageFilter for PccCanSocket {}
+
+impl HasReceiveStatus for PccCanSocket {}
+impl HasSetReceiveStatus for PccCanSocket {}
