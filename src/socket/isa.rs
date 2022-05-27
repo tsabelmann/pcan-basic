@@ -5,9 +5,9 @@
 use crate::bus::IsaBus;
 use crate::channel::Channel;
 use crate::df::{
-    HasAllowErrorFrames, HasAllowRTRFrames, HasAllowStatusFrames, HasMessageFilter,
-    HasReceiveStatus, HasSetAllowErrorFrames, HasSetAllowRTRFrames, HasSetAllowStatusFrames,
-    HasSetMessageFilter, HasSetReceiveStatus,
+    HasAcceptanceFilter11Bit, HasAllowErrorFrames, HasAllowRTRFrames, HasAllowStatusFrames,
+    HasMessageFilter, HasReceiveStatus, HasSetAcceptanceFilter11Bit, HasSetAllowErrorFrames,
+    HasSetAllowRTRFrames, HasSetAllowStatusFrames, HasSetMessageFilter, HasSetReceiveStatus,
 };
 use crate::error::{PcanError, PcanOkError};
 use crate::hw::{
@@ -109,3 +109,6 @@ impl HasSetAllowRTRFrames for IsaCanSocket {}
 
 impl HasAllowErrorFrames for IsaCanSocket {}
 impl HasSetAllowErrorFrames for IsaCanSocket {}
+
+impl HasAcceptanceFilter11Bit for IsaCanSocket {}
+impl HasSetAcceptanceFilter11Bit for IsaCanSocket {}
