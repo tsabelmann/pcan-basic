@@ -4,7 +4,7 @@
 
 use crate::bus::DngBus;
 use crate::channel::Channel;
-use crate::df::{HasMessageFilter, HasSetMessageFilter};
+use crate::df::{HasMessageFilter, HasReceiveStatus, HasSetMessageFilter, HasSetReceiveStatus};
 use crate::error::{PcanError, PcanOkError};
 use crate::hw::{
     HasControllerNumber, HasDevicePartNumber, HasHardwareName, HasSetControllerNumber,
@@ -94,3 +94,6 @@ impl HasFirmwareVersion for DngCanSocket {}
 
 impl HasMessageFilter for DngCanSocket {}
 impl HasSetMessageFilter for DngCanSocket {}
+
+impl HasReceiveStatus for DngCanSocket {}
+impl HasSetReceiveStatus for DngCanSocket {}
