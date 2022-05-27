@@ -214,7 +214,7 @@ pub trait BitrateInfoFd {
 
 impl<T: HasBitrateInfoFd + Channel> BitrateInfoFd for T {
     fn bitrate_info_fd(&self) -> Result<String, PcanError> {
-        let mut data = [0u8; 256];
+        let mut data = [0u8; pcan::MAX_LENGTH_VERSION_STRING as usize];
         let code = unsafe {
             pcan::CAN_GetValue(
                 self.channel(),
@@ -352,4 +352,28 @@ pub trait FirmwareVersion {
     fn firmware_version(&self) -> Result<String, PcanError>;
 }
 
-// pub fn attached_channel_count() -> Result<u32, PcanError>
+impl<T: HasFirmwareVersion + Channel> FirmwareVersion for T {
+    fn firmware_version(&self) -> Result<String, PcanError> {
+        let mut data = [0u8; pcan::MAX_LENGTH_VERSION_STRING as usize];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_FIRMWARE_VERSION as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => match std::str::from_utf8(&data) {
+                Ok(s) => {
+                    let s = s.trim_matches(char::from(0));
+                    Ok(String::from(s))
+                }
+                Err(_) => Err(PcanError::Unknown),
+            },
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
