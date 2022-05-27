@@ -3,6 +3,7 @@ use crate::channel::Channel;
 use crate::hw::{HasChannelCondition, HasControllerNumber, HasDevicePartNumber, HasHardwareName};
 use crate::info::{HasBitrateInfo, HasBitrateInfoFd, HasChannelFeatures, HasChannelVersion};
 use crate::pcan;
+use crate::special::HasFiveVoltsPower;
 
 ///
 #[derive(Debug, PartialEq, Copy, Clone)]
@@ -72,3 +73,5 @@ impl HasBitrateInfo for PccBus {}
 impl HasBitrateInfoFd for PccBus {}
 
 /* SPECIAL BEHAVIOR */
+
+impl HasFiveVoltsPower for PccBus {}
