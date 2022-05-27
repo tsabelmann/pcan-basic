@@ -5,9 +5,10 @@
 use crate::bus::PccBus;
 use crate::channel::Channel;
 use crate::df::{
-    HasAcceptanceFilter11Bit, HasAllowErrorFrames, HasAllowRTRFrames, HasAllowStatusFrames,
-    HasMessageFilter, HasReceiveStatus, HasSetAcceptanceFilter11Bit, HasSetAllowErrorFrames,
-    HasSetAllowRTRFrames, HasSetAllowStatusFrames, HasSetMessageFilter, HasSetReceiveStatus,
+    HasAcceptanceFilter11Bit, HasAcceptanceFilter29Bit, HasAllowErrorFrames, HasAllowRTRFrames,
+    HasAllowStatusFrames, HasMessageFilter, HasReceiveStatus, HasSetAcceptanceFilter11Bit,
+    HasSetAcceptanceFilter29Bit, HasSetAllowErrorFrames, HasSetAllowRTRFrames,
+    HasSetAllowStatusFrames, HasSetMessageFilter, HasSetReceiveStatus,
 };
 use crate::error::{PcanError, PcanOkError};
 use crate::hw::{
@@ -117,3 +118,6 @@ impl HasSetAllowErrorFrames for PccCanSocket {}
 
 impl HasAcceptanceFilter11Bit for PccCanSocket {}
 impl HasSetAcceptanceFilter11Bit for PccCanSocket {}
+
+impl HasAcceptanceFilter29Bit for PccCanSocket {}
+impl HasSetAcceptanceFilter29Bit for PccCanSocket {}
