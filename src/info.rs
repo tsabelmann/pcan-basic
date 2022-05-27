@@ -294,6 +294,8 @@ impl<T: HasDataBusSpeed + Channel> DataBusSpeed for T {
     }
 }
 
+/* LAN SERVICE RUNNING / STOPPED */
+
 pub fn lan_service_is_running() -> Result<bool, PcanError> {
     let mut data = [0u8; 4];
     let code = unsafe {
@@ -354,7 +356,7 @@ pub trait FirmwareVersion {
 
 impl<T: HasFirmwareVersion + Channel> FirmwareVersion for T {
     fn firmware_version(&self) -> Result<String, PcanError> {
-        let mut data = [0u8; pcan::MAX_LENGTH_VERSION_STRING as usize];
+        let mut data = [0u8; 18usize];
         let code = unsafe {
             pcan::CAN_GetValue(
                 self.channel(),
