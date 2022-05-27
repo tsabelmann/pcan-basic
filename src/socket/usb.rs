@@ -5,8 +5,9 @@
 use crate::bus::UsbBus;
 use crate::channel::Channel;
 use crate::df::{
-    HasAllowRTRFrames, HasAllowStatusFrames, HasMessageFilter, HasReceiveStatus,
-    HasSetAllowRTRFrames, HasSetAllowStatusFrames, HasSetMessageFilter, HasSetReceiveStatus,
+    HasAllowErrorFrames, HasAllowRTRFrames, HasAllowStatusFrames, HasMessageFilter,
+    HasReceiveStatus, HasSetAllowErrorFrames, HasSetAllowRTRFrames, HasSetAllowStatusFrames,
+    HasSetMessageFilter, HasSetReceiveStatus,
 };
 use crate::error::{PcanError, PcanOkError};
 use crate::hw::{
@@ -128,3 +129,6 @@ impl HasSetAllowStatusFrames for UsbCanSocket {}
 
 impl HasAllowRTRFrames for UsbCanSocket {}
 impl HasSetAllowRTRFrames for UsbCanSocket {}
+
+impl HasAllowErrorFrames for UsbCanSocket {}
+impl HasSetAllowErrorFrames for UsbCanSocket {}
