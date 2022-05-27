@@ -4,6 +4,7 @@
 
 use crate::bus::DngBus;
 use crate::channel::Channel;
+use crate::df::{HasMessageFilter, HasSetMessageFilter};
 use crate::error::{PcanError, PcanOkError};
 use crate::hw::{
     HasControllerNumber, HasDevicePartNumber, HasHardwareName, HasSetControllerNumber,
@@ -88,3 +89,8 @@ impl HasDataBusSpeed for DngCanSocket {}
 impl HasFirmwareVersion for DngCanSocket {}
 
 /* SPECIAL BEHAVIOR */
+
+/* CONTROLLING DATA FLOW */
+
+impl HasMessageFilter for DngCanSocket {}
+impl HasSetMessageFilter for DngCanSocket {}
