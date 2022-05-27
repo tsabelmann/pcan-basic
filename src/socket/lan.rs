@@ -3,12 +3,17 @@
 //!
 
 use crate::bus::LanBus;
-use crate::socket::{Baudrate, HasCanRead, HasCanReadFd, HasCanWrite, HasCanWriteFd, Socket};
 use crate::channel::Channel;
 use crate::error::{PcanError, PcanOkError};
-use crate::hw::{HasControllerNumber, HasDeviceId, HasDevicePartNumber, HasHardwareName, HasIpAddress, HasSetControllerNumber, HasSetDeviceId};
-use crate::info::{HasBitrateInfo, HasChannelFeatures, HasChannelVersion, HasNominalBusSpeed};
+use crate::hw::{
+    HasControllerNumber, HasDeviceId, HasDevicePartNumber, HasHardwareName, HasIpAddress,
+    HasSetControllerNumber, HasSetDeviceId,
+};
+use crate::info::{
+    HasBitrateInfo, HasChannelFeatures, HasChannelVersion, HasDataBusSpeed, HasNominalBusSpeed,
+};
 use crate::pcan;
+use crate::socket::{Baudrate, HasCanRead, HasCanReadFd, HasCanWrite, HasCanWriteFd, Socket};
 
 #[derive(Debug, PartialEq)]
 pub struct LanCanSocket {
@@ -82,5 +87,7 @@ impl HasChannelFeatures for LanCanSocket {}
 impl HasBitrateInfo for LanCanSocket {}
 
 impl HasNominalBusSpeed for LanCanSocket {}
+
+impl HasDataBusSpeed for LanCanSocket {}
 
 /* SPECIAL BEHAVIOR */
