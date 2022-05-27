@@ -1,5 +1,6 @@
 use crate::bus::Bus;
 use crate::channel::Channel;
+use crate::df::{HasReceiveStatus, HasSetReceiveStatus};
 use crate::hw::{HasChannelCondition, HasControllerNumber, HasDevicePartNumber, HasHardwareName};
 use crate::info::{HasBitrateInfo, HasBitrateInfoFd, HasChannelFeatures, HasChannelVersion};
 use crate::pcan;
@@ -75,3 +76,8 @@ impl HasBitrateInfoFd for PccBus {}
 /* SPECIAL BEHAVIOR */
 
 impl HasFiveVoltsPower for PccBus {}
+
+/* CONTROLLING DATA FLOW */
+
+impl HasReceiveStatus for PccBus {}
+impl HasSetReceiveStatus for PccBus {}
