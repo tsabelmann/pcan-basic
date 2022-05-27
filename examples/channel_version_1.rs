@@ -7,6 +7,6 @@ fn main() {
 
     match result {
         Ok(version) => println!("{:?}", version),
-        Err(err) => println!("{:?}", err)
+        Err(err) => println!("{:?}", err),
     }
 }

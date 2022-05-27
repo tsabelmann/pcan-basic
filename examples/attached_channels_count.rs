@@ -5,6 +5,6 @@ fn main() {
     let result = attached_channels_count();
     match result {
         Ok(channel_count) => println!("{}", channel_count),
-        Err(_) => println!("An error occurred!")
+        Err(_) => println!("An error occurred!"),
     }
 }

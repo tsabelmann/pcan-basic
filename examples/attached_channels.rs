@@ -8,7 +8,7 @@ fn main() {
             for channel in attached_channels {
                 println!("{:?}", channel.device_name());
             }
-        },
-        Err(_) => println!("An error occurred!")
+        }
+        Err(_) => println!("An error occurred!"),
     }
 }

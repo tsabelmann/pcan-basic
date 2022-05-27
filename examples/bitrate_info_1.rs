@@ -8,7 +8,7 @@ fn main() {
         Ok((btr0, btr1)) => {
             println!("btr0={}", btr0);
             println!("btr1={}", btr1);
-        },
-        Err(err) => println!("{:?}", err)
+        }
+        Err(err) => println!("{:?}", err),
     }
 }

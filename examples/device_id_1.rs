@@ -7,6 +7,6 @@ fn main() {
 
     match result {
         Ok(id) => println!("{}", id),
-        _ => println!("An error occurred!")
+        _ => println!("An error occurred!"),
     }
 }

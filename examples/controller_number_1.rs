@@ -7,6 +7,6 @@ fn main() {
 
     match result {
         Ok(controller_number) => println!("{}", controller_number),
-        _ => println!("An error occurred!")
+        _ => println!("An error occurred!"),
     }
 }

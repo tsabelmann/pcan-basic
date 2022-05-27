@@ -7,6 +7,6 @@ fn main() {
 
     match result {
         Ok(hardware_name) => println!("{}", hardware_name),
-        _ => println!("An error occurred!")
+        _ => println!("An error occurred!"),
     }
 }

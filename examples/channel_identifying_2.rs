@@ -1,19 +1,15 @@
-use std::thread::sleep;
-use std::time::Duration;
 use pcan_basic::bus::UsbBus;
+use pcan_basic::error::PcanError;
+use pcan_basic::hw::ChannelIdentifying;
+use pcan_basic::socket::usb::UsbCanSocket;
 use pcan_basic::socket::{Baudrate, CanWrite, MessageType};
 use pcan_basic::socket::{CanFrame, CanRead};
-use pcan_basic::socket::usb::UsbCanSocket;
-use pcan_basic::error::PcanError;
-use pcan_basic::hw::{ChannelIdentifying};
-
+use std::thread::sleep;
+use std::time::Duration;
 
 fn main() {
-    let usb_socket = match UsbCanSocket::open(
-        UsbBus::USB1,
-        Baudrate::Baud500K
-    ) {
-        Ok(socket) => { socket }
+    let usb_socket = match UsbCanSocket::open(UsbBus::USB1, Baudrate::Baud500K) {
+        Ok(socket) => socket,
         Err(err) => {
             println!("{:?}", err);
             return;

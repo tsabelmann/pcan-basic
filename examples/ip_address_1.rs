@@ -7,6 +7,6 @@ fn main() {
 
     match result {
         Ok(ip_address) => println!("{}", ip_address),
-        _ => println!("An error occurred!")
+        _ => println!("An error occurred!"),
     }
 }

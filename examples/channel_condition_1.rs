@@ -7,6 +7,6 @@ fn main() {
 
     match channel_condition {
         Ok(status) => println!("{:?}", status),
-        _ => println!("An error occurred!")
+        _ => println!("An error occurred!"),
     }
 }
