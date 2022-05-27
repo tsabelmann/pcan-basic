@@ -5,8 +5,9 @@
 use crate::bus::DngBus;
 use crate::channel::Channel;
 use crate::df::{
-    HasAllowRTRFrames, HasAllowStatusFrames, HasMessageFilter, HasReceiveStatus,
-    HasSetAllowRTRFrames, HasSetAllowStatusFrames, HasSetMessageFilter, HasSetReceiveStatus,
+    HasAllowErrorFrames, HasAllowRTRFrames, HasAllowStatusFrames, HasMessageFilter,
+    HasReceiveStatus, HasSetAllowErrorFrames, HasSetAllowRTRFrames, HasSetAllowStatusFrames,
+    HasSetMessageFilter, HasSetReceiveStatus,
 };
 use crate::error::{PcanError, PcanOkError};
 use crate::hw::{
@@ -106,3 +107,6 @@ impl HasSetAllowStatusFrames for DngCanSocket {}
 
 impl HasAllowRTRFrames for DngCanSocket {}
 impl HasSetAllowRTRFrames for DngCanSocket {}
+
+impl HasAllowErrorFrames for DngCanSocket {}
+impl HasSetAllowErrorFrames for DngCanSocket {}
