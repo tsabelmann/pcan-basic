@@ -1,8 +1,12 @@
 use crate::bus::Bus;
 use crate::channel::Channel;
-use crate::hw::{HasChannelCondition, HasChannelIdentifying, HasControllerNumber, HasDeviceId, HasDevicePartNumber, HasHardwareName};
+use crate::hw::{
+    HasChannelCondition, HasChannelIdentifying, HasControllerNumber, HasDeviceId,
+    HasDevicePartNumber, HasHardwareName,
+};
 use crate::info::{HasBitrateInfo, HasBitrateInfoFd, HasChannelFeatures, HasChannelVersion};
 use crate::pcan;
+use crate::special::HasFiveVoltsPower;
 
 ///
 #[derive(Debug, PartialEq, Copy, Clone)]
@@ -132,3 +136,5 @@ impl HasBitrateInfo for UsbBus {}
 impl HasBitrateInfoFd for UsbBus {}
 
 /* SPECIAL BEHAVIOR */
+
+impl HasFiveVoltsPower for UsbBus {}
