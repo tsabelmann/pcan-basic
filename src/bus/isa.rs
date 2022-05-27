@@ -1,5 +1,6 @@
 use crate::bus::Bus;
 use crate::channel::Channel;
+use crate::df::{HasReceiveStatus, HasSetReceiveStatus};
 use crate::hw::{HasChannelCondition, HasControllerNumber, HasDevicePartNumber, HasHardwareName};
 use crate::info::{HasBitrateInfo, HasBitrateInfoFd, HasChannelFeatures, HasChannelVersion};
 use crate::pcan;
@@ -96,3 +97,8 @@ impl HasBitrateInfo for IsaBus {}
 impl HasBitrateInfoFd for IsaBus {}
 
 /* SPECIAL BEHAVIOR */
+
+/* CONTROLLING DATA FLOW */
+
+impl HasReceiveStatus for IsaBus {}
+impl HasSetReceiveStatus for IsaBus {}
