@@ -9,7 +9,8 @@ use crate::hw::{
     HasControllerNumber, HasDevicePartNumber, HasHardwareName, HasSetControllerNumber,
 };
 use crate::info::{
-    HasBitrateInfo, HasChannelFeatures, HasChannelVersion, HasDataBusSpeed, HasNominalBusSpeed,
+    HasBitrateInfo, HasChannelFeatures, HasChannelVersion, HasDataBusSpeed, HasFirmwareVersion,
+    HasNominalBusSpeed,
 };
 use crate::pcan;
 use crate::socket::{Baudrate, HasCanRead, HasCanReadFd, HasCanWrite, HasCanWriteFd, Socket};
@@ -82,5 +83,7 @@ impl HasBitrateInfo for IsaCanSocket {}
 impl HasNominalBusSpeed for IsaCanSocket {}
 
 impl HasDataBusSpeed for IsaCanSocket {}
+
+impl HasFirmwareVersion for IsaCanSocket {}
 
 /* SPECIAL BEHAVIOR */
