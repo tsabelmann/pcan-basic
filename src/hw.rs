@@ -336,6 +336,8 @@ pub fn attached_channels_count() -> Result<u32, PcanError> {
     }
 }
 
+/* ATTACHED CHANNELS */
+
 #[derive(Debug)]
 pub struct ChannelInformation {
     channel_information: pcan::tagTPCANChannelInformation,
