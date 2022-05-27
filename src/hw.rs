@@ -3,14 +3,12 @@
 //!
 
 use crate::channel::Channel;
-use crate::bus::Bus;
 use crate::error::{PcanError, PcanOkError};
 use crate::pcan;
 use std::ffi::c_void;
 use std::mem::size_of;
 use std::net::Ipv4Addr;
 use std::os::raw::c_char;
-use pcan_basic_sys::TPCANChannelInformation;
 
 #[derive(Debug, PartialEq)]
 pub enum ChannelConditionStatus {
@@ -340,7 +338,7 @@ pub fn attached_channels_count() -> Result<u32, PcanError> {
 
 #[derive(Debug)]
 pub struct ChannelInformation {
-    channel_information: pcan::tagTPCANChannelInformation
+    channel_information: pcan::tagTPCANChannelInformation,
 }
 
 impl ChannelInformation {
@@ -353,13 +351,15 @@ impl ChannelInformation {
                 device_features: 0,
                 device_name: [c_char::default(); 33usize],
                 device_id: 0,
-                channel_condition: 0
-            }
+                channel_condition: 0,
+            },
         }
     }
 
     pub fn device_name(&self) -> String {
-        let string = self.channel_information.device_name
+        let string = self
+            .channel_information
+            .device_name
             .as_slice()
             .iter()
             .map(|c| char::from(*c as u8))
@@ -386,7 +386,7 @@ pub fn attached_channels() -> Result<Vec<ChannelInformation>, PcanError> {
             pcan::PCAN_NONEBUS as u16,
             pcan::PCAN_ATTACHED_CHANNELS as u8,
             channel_information_list.as_mut_ptr() as *mut c_void,
-            attached_channels_count * size_of::<pcan::tagTPCANChannelInformation>() as u32
+            attached_channels_count * size_of::<pcan::tagTPCANChannelInformation>() as u32,
         )
     };
 
