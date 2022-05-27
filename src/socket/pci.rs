@@ -4,7 +4,7 @@
 
 use crate::bus::PciBus;
 use crate::channel::Channel;
-use crate::df::{HasMessageFilter, HasSetMessageFilter};
+use crate::df::{HasMessageFilter, HasReceiveStatus, HasSetMessageFilter, HasSetReceiveStatus};
 use crate::error::{PcanError, PcanOkError};
 use crate::hw::{
     HasControllerNumber, HasDeviceId, HasDevicePartNumber, HasHardwareName, HasSetControllerNumber,
@@ -98,3 +98,6 @@ impl HasFirmwareVersion for PciCanSocket {}
 
 impl HasMessageFilter for PciCanSocket {}
 impl HasSetMessageFilter for PciCanSocket {}
+
+impl HasReceiveStatus for PciCanSocket {}
+impl HasSetReceiveStatus for PciCanSocket {}
