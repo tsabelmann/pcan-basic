@@ -9,7 +9,7 @@ use std::ffi::c_void;
 
 /* MessageFilter traits */
 
-pub(crate) HasMessageFilter {}
+pub(crate) trait HasMessageFilter {}
 
 pub trait MessageFilter {
     fn is_open_filter(&self) -> Result<bool, PcanError>;
@@ -30,12 +30,12 @@ impl<T: HasMessageFilter + Channel> MessageFilter for T {
 
         match PcanOkError::try_from(code) {
             Ok(PcanOkError::Ok) => {
-                if u32::from_le_bytes(data) & pcan::PCAN_FILTER_OPEN == pcan::PCAN_FILTER_OPEN {
+                if u32::from_le_bytes(data) == pcan::PCAN_FILTER_OPEN {
                     Ok(true)
                 } else {
                     Ok(false)
                 }
-            },
+            }
             Ok(PcanOkError::Err(err)) => Err(err),
             Err(_) => Err(PcanError::Unknown),
         }
@@ -44,7 +44,7 @@ impl<T: HasMessageFilter + Channel> MessageFilter for T {
     fn is_closed_filter(&self) -> Result<bool, PcanError> {
         let mut data = [0u8; 4];
         let code = unsafe {
-            pcan::CAN_SetValue(
+            pcan::CAN_GetValue(
                 self.channel(),
                 pcan::PCAN_MESSAGE_FILTER as u8,
                 data.as_mut_ptr() as *mut c_void,
@@ -54,12 +54,12 @@ impl<T: HasMessageFilter + Channel> MessageFilter for T {
 
         match PcanOkError::try_from(code) {
             Ok(PcanOkError::Ok) => {
-                if u32::from_le_bytes(data) & pcan::PCAN_FILTER_CLOSE == pcan::PCAN_FILTER_CLOSE {
+                if u32::from_le_bytes(data) == pcan::PCAN_FILTER_CLOSE {
                     Ok(true)
                 } else {
                     Ok(false)
                 }
-            },
+            }
             Ok(PcanOkError::Err(err)) => Err(err),
             Err(_) => Err(PcanError::Unknown),
         }
