@@ -3,12 +3,16 @@
 //!
 
 use crate::bus::IsaBus;
-use crate::socket::{Baudrate, HasCanRead, HasCanReadFd, HasCanWrite, HasCanWriteFd, Socket};
 use crate::channel::Channel;
 use crate::error::{PcanError, PcanOkError};
-use crate::hw::{HasControllerNumber, HasDevicePartNumber, HasHardwareName, HasSetControllerNumber};
-use crate::info::{HasBitrateInfo, HasChannelFeatures, HasChannelVersion, HasNominalBusSpeed};
+use crate::hw::{
+    HasControllerNumber, HasDevicePartNumber, HasHardwareName, HasSetControllerNumber,
+};
+use crate::info::{
+    HasBitrateInfo, HasChannelFeatures, HasChannelVersion, HasDataBusSpeed, HasNominalBusSpeed,
+};
 use crate::pcan;
+use crate::socket::{Baudrate, HasCanRead, HasCanReadFd, HasCanWrite, HasCanWriteFd, Socket};
 
 #[derive(Debug, PartialEq)]
 pub struct IsaCanSocket {
@@ -76,5 +80,7 @@ impl HasChannelFeatures for IsaCanSocket {}
 impl HasBitrateInfo for IsaCanSocket {}
 
 impl HasNominalBusSpeed for IsaCanSocket {}
+
+impl HasDataBusSpeed for IsaCanSocket {}
 
 /* SPECIAL BEHAVIOR */
