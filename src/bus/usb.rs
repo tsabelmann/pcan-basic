@@ -1,5 +1,6 @@
 use crate::bus::Bus;
 use crate::channel::Channel;
+use crate::df::{HasReceiveStatus, HasSetReceiveStatus};
 use crate::hw::{
     HasChannelCondition, HasChannelIdentifying, HasControllerNumber, HasDeviceId,
     HasDevicePartNumber, HasHardwareName,
@@ -138,3 +139,8 @@ impl HasBitrateInfoFd for UsbBus {}
 /* SPECIAL BEHAVIOR */
 
 impl HasFiveVoltsPower for UsbBus {}
+
+/* CONTROLLING DATA FLOW */
+
+impl HasReceiveStatus for UsbBus {}
+impl HasSetReceiveStatus for UsbBus {}
