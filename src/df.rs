@@ -6,7 +6,6 @@ use crate::channel::Channel;
 use crate::error::{PcanError, PcanOkError};
 use crate::pcan;
 use std::ffi::c_void;
-use std::ops::BitXor;
 
 /* MessageFilter traits */
 
