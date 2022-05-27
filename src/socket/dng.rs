@@ -3,12 +3,16 @@
 //!
 
 use crate::bus::DngBus;
-use crate::socket::{Baudrate, HasCanRead, HasCanReadFd, HasCanWrite, HasCanWriteFd, Socket};
 use crate::channel::Channel;
 use crate::error::{PcanError, PcanOkError};
-use crate::hw::{HasControllerNumber, HasDevicePartNumber, HasHardwareName, HasSetControllerNumber};
-use crate::info::{HasBitrateInfo, HasChannelFeatures, HasChannelVersion, HasNominalBusSpeed};
+use crate::hw::{
+    HasControllerNumber, HasDevicePartNumber, HasHardwareName, HasSetControllerNumber,
+};
+use crate::info::{
+    HasBitrateInfo, HasChannelFeatures, HasChannelVersion, HasDataBusSpeed, HasNominalBusSpeed,
+};
 use crate::pcan;
+use crate::socket::{Baudrate, HasCanRead, HasCanReadFd, HasCanWrite, HasCanWriteFd, Socket};
 
 #[derive(Debug, PartialEq)]
 pub struct DngCanSocket {
@@ -77,5 +81,7 @@ impl HasChannelFeatures for DngCanSocket {}
 impl HasBitrateInfo for DngCanSocket {}
 
 impl HasNominalBusSpeed for DngCanSocket {}
+
+impl HasDataBusSpeed for DngCanSocket {}
 
 /* SPECIAL BEHAVIOR */
