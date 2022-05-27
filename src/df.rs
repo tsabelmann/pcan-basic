@@ -466,7 +466,7 @@ impl<T: HasAcceptanceFilter11Bit + Channel> AcceptanceFilter11Bit for T {
             Ok(PcanOkError::Ok) => {
                 let acceptance_mask = u32::from_le_bytes([data[0], data[1], data[2], data[3]]);
                 let acceptance_code = u32::from_le_bytes([data[4], data[5], data[6], data[7]]);
-                Ok((acceptance_code, acceptance_mask))
+                Ok((acceptance_mask, acceptance_code))
             }
             Ok(PcanOkError::Err(err)) => Err(err),
             Err(_) => Err(PcanError::Unknown),
@@ -505,6 +505,85 @@ impl<T: HasSetAcceptanceFilter11Bit + Channel> SetAcceptanceFilter11Bit for T {
             pcan::CAN_SetValue(
                 self.channel(),
                 pcan::PCAN_ACCEPTANCE_FILTER_11BIT as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => Ok(()),
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
+/* ACCEPTANCE FILTER 29Bit traits */
+
+pub(crate) trait HasAcceptanceFilter29Bit {}
+
+pub trait AcceptanceFilter29Bit {
+    fn acceptance_filter_29bit(&self) -> Result<(u32, u32), PcanError>;
+}
+
+impl<T: HasAcceptanceFilter29Bit + Channel> AcceptanceFilter29Bit for T {
+    fn acceptance_filter_29bit(&self) -> Result<(u32, u32), PcanError> {
+        let mut data = [0u8; 8];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_ACCEPTANCE_FILTER_29BIT as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => {
+                let acceptance_mask = u32::from_le_bytes([data[0], data[1], data[2], data[3]]);
+                let acceptance_code = u32::from_le_bytes([data[4], data[5], data[6], data[7]]);
+                Ok((acceptance_mask, acceptance_code))
+            }
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
+pub(crate) trait HasSetAcceptanceFilter29Bit {}
+
+pub trait SetAcceptanceFilter29Bit {
+    fn set_acceptance_filter_29bit(&self, ids: &[u32]) -> Result<(), PcanError>;
+}
+
+impl<T: HasSetAcceptanceFilter29Bit + Channel> SetAcceptanceFilter29Bit for T {
+    fn set_acceptance_filter_29bit(&self, ids: &[u32]) -> Result<(), PcanError> {
+        let acceptance_code = ids
+            .iter()
+            .map(|x| *x & 0x1F_FF_FF_FFu32)
+            .fold(0xFF_FF_FF_FFu32, |x, y| x & y);
+        let acceptance_code_data = acceptance_code.to_le_bytes();
+
+        let acceptance_mask = ids
+            .iter()
+            .map(|x| *x & 0x1F_FF_FF_FFu32)
+            .fold(0u32, |x, y| x ^ y);
+        let acceptance_mask_data = acceptance_mask.to_le_bytes();
+
+        let mut data = [
+            acceptance_mask_data[0],
+            acceptance_mask_data[1],
+            acceptance_mask_data[2],
+            acceptance_mask_data[3],
+            acceptance_code_data[0],
+            acceptance_code_data[1],
+            acceptance_code_data[2],
+            acceptance_code_data[3],
+        ];
+        let code = unsafe {
+            pcan::CAN_SetValue(
+                self.channel(),
+                pcan::PCAN_ACCEPTANCE_FILTER_29BIT as u8,
                 data.as_mut_ptr() as *mut c_void,
                 data.len() as u32,
             )
