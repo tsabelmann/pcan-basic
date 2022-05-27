@@ -3,12 +3,18 @@
 //!
 
 use crate::bus::UsbBus;
-use crate::socket::{Baudrate, HasCanRead, HasCanReadFd, HasCanWrite, HasCanWriteFd, Socket};
 use crate::channel::Channel;
 use crate::error::{PcanError, PcanOkError};
-use crate::hw::{HasChannelIdentifying, HasControllerNumber, HasDeviceId, HasDevicePartNumber, HasHardwareName, HasSetControllerNumber, HasSetDeviceId};
-use crate::info::{HasBitrateInfo, HasChannelFeatures, HasChannelVersion, HasDataBusSpeed, HasNominalBusSpeed};
+use crate::hw::{
+    HasChannelIdentifying, HasControllerNumber, HasDeviceId, HasDevicePartNumber, HasHardwareName,
+    HasSetControllerNumber, HasSetDeviceId,
+};
+use crate::info::{
+    HasBitrateInfo, HasChannelFeatures, HasChannelVersion, HasDataBusSpeed, HasFirmwareVersion,
+    HasNominalBusSpeed,
+};
 use crate::pcan;
+use crate::socket::{Baudrate, HasCanRead, HasCanReadFd, HasCanWrite, HasCanWriteFd, Socket};
 use crate::special::{
     HasBusOffAutoreset, HasFiveVoltsPower, HasInterframeDelay, HasListenOnly,
     HasSetBusOffAutoreset, HasSetFiveVoltsPower, HasSetInterframeDelay, HasSetListenOnly,
@@ -88,6 +94,8 @@ impl HasBitrateInfo for UsbCanSocket {}
 impl HasNominalBusSpeed for UsbCanSocket {}
 
 impl HasDataBusSpeed for UsbCanSocket {}
+
+impl HasFirmwareVersion for UsbCanSocket {}
 
 /* SPECIAL BEHAVIOR */
 
