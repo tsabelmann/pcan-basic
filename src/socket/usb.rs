@@ -7,7 +7,7 @@ use crate::socket::{Baudrate, HasCanRead, HasCanReadFd, HasCanWrite, HasCanWrite
 use crate::channel::Channel;
 use crate::error::{PcanError, PcanOkError};
 use crate::hw::{HasChannelIdentifying, HasControllerNumber, HasDeviceId, HasDevicePartNumber, HasHardwareName, HasSetControllerNumber, HasSetDeviceId};
-use crate::info::{HasBitrateInfo, HasChannelFeatures, HasChannelVersion, HasNominalBusSpeed};
+use crate::info::{HasBitrateInfo, HasChannelFeatures, HasChannelVersion, HasDataBusSpeed, HasNominalBusSpeed};
 use crate::pcan;
 use crate::special::{
     HasBusOffAutoreset, HasFiveVoltsPower, HasInterframeDelay, HasListenOnly,
@@ -86,6 +86,8 @@ impl HasChannelFeatures for UsbCanSocket {}
 impl HasBitrateInfo for UsbCanSocket {}
 
 impl HasNominalBusSpeed for UsbCanSocket {}
+
+impl HasDataBusSpeed for UsbCanSocket {}
 
 /* SPECIAL BEHAVIOR */
 
