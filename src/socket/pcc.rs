@@ -21,7 +21,7 @@ use crate::info::{
 use crate::pcan;
 use crate::socket::{Baudrate, HasCanRead, HasCanReadFd, HasCanWrite, HasCanWriteFd, Socket};
 use crate::special::{HasFiveVoltsPower, HasSetFiveVoltsPower};
-use crate::trace::{HasSetTraceLocation, HasTraceLocation};
+use crate::trace::{HasSetTraceLocation, HasSetTraceStatus, HasTraceLocation, HasTraceStatus};
 
 #[derive(Debug, PartialEq)]
 pub struct PccCanSocket {
@@ -127,3 +127,6 @@ impl HasSetAcceptanceFilter29Bit for PccCanSocket {}
 
 impl HasTraceLocation for PccCanSocket {}
 impl HasSetTraceLocation for PccCanSocket {}
+
+impl HasTraceStatus for PccCanSocket {}
+impl HasSetTraceStatus for PccCanSocket {}
