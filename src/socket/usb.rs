@@ -27,8 +27,8 @@ use crate::special::{
     HasSetBusOffAutoreset, HasSetFiveVoltsPower, HasSetInterframeDelay, HasSetListenOnly,
 };
 use crate::trace::{
-    HasSetTraceLocation, HasSetTraceSize, HasSetTraceStatus, HasTraceLocation, HasTraceSize,
-    HasTraceStatus,
+    HasSetTraceConfigure, HasSetTraceLocation, HasSetTraceSize, HasSetTraceStatus,
+    HasTraceConfigure, HasTraceLocation, HasTraceSize, HasTraceStatus,
 };
 
 #[derive(Debug, PartialEq)]
@@ -158,3 +158,6 @@ impl HasSetTraceStatus for UsbCanSocket {}
 
 impl HasTraceSize for UsbCanSocket {}
 impl HasSetTraceSize for UsbCanSocket {}
+
+impl HasTraceConfigure for UsbCanSocket {}
+impl HasSetTraceConfigure for UsbCanSocket {}
