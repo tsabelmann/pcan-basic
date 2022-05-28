@@ -13,7 +13,7 @@ fn main() {
         }
     };
 
-    match can_socket.digital_mode(0) {
+    match can_socket.mode(0) {
         Ok(digital_mode) => println!("digital_mode={:?}", digital_mode),
         Err(err) => println!("{:?}", err),
     }
