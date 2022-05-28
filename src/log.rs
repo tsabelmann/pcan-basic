@@ -3,12 +3,14 @@ use crate::pcan;
 use std::ffi::c_void;
 use std::path::{Path, PathBuf};
 
+/* LOG LOCATION functions */
+
 pub fn log_location() -> Result<PathBuf, PcanError> {
     let mut data = [0u8; pcan::MAX_LENGTH_VERSION_STRING as usize];
     let code = unsafe {
         pcan::CAN_GetValue(
             pcan::PCAN_NONEBUS as u16,
-            pcan_basic_sys::PCAN_LOG_LOCATION as u8,
+            pcan::PCAN_LOG_LOCATION as u8,
             data.as_mut_ptr() as *mut c_void,
             data.len() as u32,
         )
@@ -37,7 +39,7 @@ pub fn set_log_location<P: AsRef<Path>>(path: P) -> Result<(), PcanError> {
     let code = unsafe {
         pcan::CAN_SetValue(
             pcan::PCAN_NONEBUS as u16,
-            pcan_basic_sys::PCAN_LOG_LOCATION as u8,
+            pcan::PCAN_LOG_LOCATION as u8,
             data.as_mut_ptr() as *mut c_void,
             data.len() as u32,
         )
@@ -54,12 +56,14 @@ pub fn set_default_log_location() -> Result<(), PcanError> {
     set_log_location(" ")
 }
 
+/* LOG STATUS functions */
+
 pub fn is_logging() -> Result<bool, PcanError> {
     let mut data = [0u8; 4];
     let code = unsafe {
         pcan::CAN_GetValue(
             pcan::PCAN_NONEBUS as u16,
-            pcan_basic_sys::PCAN_LOG_STATUS as u8,
+            pcan::PCAN_LOG_STATUS as u8,
             data.as_mut_ptr() as *mut c_void,
             data.len() as u32,
         )
@@ -89,7 +93,7 @@ pub fn set_logging(enable: bool) -> Result<(), PcanError> {
     let code = unsafe {
         pcan::CAN_SetValue(
             pcan::PCAN_NONEBUS as u16,
-            pcan_basic_sys::PCAN_LOG_STATUS as u8,
+            pcan::PCAN_LOG_STATUS as u8,
             data.as_mut_ptr() as *mut c_void,
             data.len() as u32,
         )
@@ -101,6 +105,8 @@ pub fn set_logging(enable: bool) -> Result<(), PcanError> {
         Err(_) => Err(PcanError::Unknown),
     }
 }
+
+/* LOG CONFIGURE functions */
 
 ///
 ///
@@ -154,7 +160,7 @@ pub fn log_configuration() -> Result<LogFunction, PcanError> {
     let code = unsafe {
         pcan::CAN_GetValue(
             pcan::PCAN_NONEBUS as u16,
-            pcan_basic_sys::PCAN_LOG_CONFIGURE as u8,
+            pcan::PCAN_LOG_CONFIGURE as u8,
             data.as_mut_ptr() as *mut c_void,
             data.len() as u32,
         )
@@ -178,7 +184,7 @@ pub fn configure_log(config: LogFunction) -> Result<(), PcanError> {
     let code = unsafe {
         pcan::CAN_SetValue(
             pcan::PCAN_NONEBUS as u16,
-            pcan_basic_sys::PCAN_LOG_CONFIGURE as u8,
+            pcan::PCAN_LOG_CONFIGURE as u8,
             data.as_mut_ptr() as *mut c_void,
             data.len() as u32,
         )
@@ -191,12 +197,14 @@ pub fn configure_log(config: LogFunction) -> Result<(), PcanError> {
     }
 }
 
+/* LOG TEXT function */
+
 pub fn log_text<S: AsRef<str>>(text: S) -> Result<(), PcanError> {
     let mut data = String::from(text.as_ref());
     let code = unsafe {
         pcan::CAN_SetValue(
             pcan::PCAN_NONEBUS as u16,
-            pcan_basic_sys::PCAN_LOG_TEXT as u8,
+            pcan::PCAN_LOG_TEXT as u8,
             data.as_mut_ptr() as *mut c_void,
             data.len() as u32,
         )
