@@ -18,7 +18,7 @@ impl<T: HasTraceLocation + Channel> TraceLocation for T {
         let code = unsafe {
             pcan::CAN_GetValue(
                 self.channel(),
-                pcan_basic_sys::PCAN_TRACE_LOCATION as u8,
+                pcan::PCAN_TRACE_LOCATION as u8,
                 data.as_mut_ptr() as *mut c_void,
                 data.len() as u32,
             )
@@ -87,7 +87,7 @@ impl<T: HasTraceStatus + Channel> TraceStatus for T {
         let code = unsafe {
             pcan::CAN_GetValue(
                 self.channel(),
-                pcan_basic_sys::PCAN_TRACE_STATUS as u8,
+                pcan::PCAN_TRACE_STATUS as u8,
                 data.as_mut_ptr() as *mut c_void,
                 data.len() as u32,
             )
@@ -125,7 +125,7 @@ impl<T: HasSetTraceStatus + Channel> SetTraceStatus for T {
         let code = unsafe {
             pcan::CAN_SetValue(
                 self.channel(),
-                pcan_basic_sys::PCAN_TRACE_STATUS as u8,
+                pcan::PCAN_TRACE_STATUS as u8,
                 data.as_mut_ptr() as *mut c_void,
                 data.len() as u32,
             )
@@ -179,7 +179,7 @@ impl<T: HasSetTraceSize + Channel> SetTraceSize for T {
         let code = unsafe {
             pcan::CAN_SetValue(
                 self.channel(),
-                pcan_basic_sys::PCAN_TRACE_SIZE as u8,
+                pcan::PCAN_TRACE_SIZE as u8,
                 data.as_mut_ptr() as *mut c_void,
                 data.len() as u32,
             )
@@ -195,4 +195,100 @@ impl<T: HasSetTraceSize + Channel> SetTraceSize for T {
 
 pub fn set_default_trace_size<T: SetTraceSize>(value: &T) -> Result<(), PcanError> {
     value.set_trace_size(0)
+}
+
+/* TRACE CONFIGURE traits */
+
+#[derive(PartialEq, Debug)]
+pub enum TraceFile {
+    Single,
+    Segmented,
+    Date,
+    Time,
+    Overwrite,
+}
+
+impl TryFrom<u32> for TraceFile {
+    type Error = ();
+
+    fn try_from(value: u32) -> Result<Self, Self::Error> {
+        match value {
+            pcan::TRACE_FILE_SINGLE => Ok(TraceFile::Single),
+            pcan::TRACE_FILE_SEGMENTED => Ok(TraceFile::Segmented),
+            pcan::TRACE_FILE_DATE => Ok(TraceFile::Date),
+            pcan::TRACE_FILE_TIME => Ok(TraceFile::Time),
+            pcan::TRACE_FILE_OVERWRITE => Ok(TraceFile::Overwrite),
+            _ => Err(()),
+        }
+    }
+}
+
+impl From<TraceFile> for u32 {
+    fn from(value: TraceFile) -> Self {
+        match value {
+            TraceFile::Single => pcan::TRACE_FILE_SINGLE,
+            TraceFile::Segmented => pcan::TRACE_FILE_SEGMENTED,
+            TraceFile::Date => pcan::TRACE_FILE_DATE,
+            TraceFile::Time => pcan::TRACE_FILE_TIME,
+            TraceFile::Overwrite => pcan::TRACE_FILE_OVERWRITE,
+        }
+    }
+}
+
+pub(crate) trait HasTraceConfigure {}
+
+pub trait TraceConfigure {
+    fn trace_configuration(&self) -> Result<TraceFile, PcanError>;
+}
+
+impl<T: HasTraceConfigure + Channel> TraceConfigure for T {
+    fn trace_configuration(&self) -> Result<TraceFile, PcanError> {
+        let mut data = [0u8; 4];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_TRACE_CONFIGURE as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => {
+                let code = u32::from_le_bytes(data);
+                match TraceFile::try_from(code) {
+                    Ok(log_config) => Ok(log_config),
+                    Err(_) => Err(PcanError::Unknown),
+                }
+            }
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
+pub(crate) trait HasSetTraceConfigure {}
+
+pub trait SetTraceConfigure {
+    fn configure_trace(&self, config: TraceFile) -> Result<(), PcanError>;
+}
+
+impl<T: HasSetTraceConfigure + Channel> SetTraceConfigure for T {
+    fn configure_trace(&self, config: TraceFile) -> Result<(), PcanError> {
+        let mut data = u32::from(config).to_le_bytes();
+        let code = unsafe {
+            pcan::CAN_SetValue(
+                self.channel(),
+                pcan::PCAN_TRACE_CONFIGURE as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => Ok(()),
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
 }
