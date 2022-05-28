@@ -1,6 +1,6 @@
 [package]
 name = "pcan-basic"
-version = "0.1.0"
+version = "1.0.0"
 description = "Rust wrapper around the PCAN-basic API by PEAK"
 keywords = ["can", "pcan", "peak", "bacis", "api"]
 categories = []
@@ -17,6 +17,6 @@ readme = "README.md"
 [dependencies]
 pcan-basic-sys = "2.0.0"
 
-[package.metadata.docs.rs]
-default-target = "x86_64-pc-windows-msvc"
-targets = ["i686-pc-windows-msvc", "x86_64-pc-windows-msvc"]
+#[package.metadata.docs.rs]
+#default-target = "x86_64-pc-windows-msvc"
+#targets = ["i686-pc-windows-msvc", "x86_64-pc-windows-msvc"]
