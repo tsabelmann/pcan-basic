@@ -21,7 +21,7 @@ use crate::info::{
     HasNominalBusSpeed,
 };
 use crate::pcan;
-use crate::socket::{Baudrate, HasCanRead, HasCanReadFd, HasCanWrite, HasCanWriteFd, Socket};
+use crate::socket::{Baudrate, HasRecvCan, HasRecvCanFd, HasSendCan, HasSendCanFd, Socket};
 use crate::trace::{
     HasSetTraceConfigure, HasSetTraceLocation, HasSetTraceSize, HasSetTraceStatus,
     HasTraceConfigure, HasTraceLocation, HasTraceSize, HasTraceStatus,
@@ -71,10 +71,11 @@ impl Channel for LanCanSocket {
 
 /* CAN trait implementations */
 
-impl HasCanRead for LanCanSocket {}
-impl HasCanReadFd for LanCanSocket {}
-impl HasCanWrite for LanCanSocket {}
-impl HasCanWriteFd for LanCanSocket {}
+impl HasRecvCan for LanCanSocket {}
+impl HasSendCan for LanCanSocket {}
+
+// impl HasRecvCanFd for LanCanSocket {}
+// impl HasSendCanFd for LanCanSocket {}
 
 /* HARDWARE IDENTIFICATION */
 

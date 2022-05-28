@@ -19,7 +19,7 @@ use crate::info::{
     HasNominalBusSpeed,
 };
 use crate::pcan;
-use crate::socket::{Baudrate, HasCanRead, HasCanReadFd, HasCanWrite, HasCanWriteFd, Socket};
+use crate::socket::{Baudrate, HasRecvCan, HasRecvCanFd, HasSendCan, HasSendCanFd, Socket};
 use crate::trace::{
     HasSetTraceConfigure, HasSetTraceLocation, HasSetTraceSize, HasSetTraceStatus,
     HasTraceConfigure, HasTraceLocation, HasTraceSize, HasTraceStatus,
@@ -69,10 +69,11 @@ impl Channel for DngCanSocket {
 
 /* CAN trait implementations */
 
-impl HasCanRead for DngCanSocket {}
-impl HasCanReadFd for DngCanSocket {}
-impl HasCanWrite for DngCanSocket {}
-impl HasCanWriteFd for DngCanSocket {}
+impl HasRecvCan for DngCanSocket {}
+impl HasSendCan for DngCanSocket {}
+
+// impl HasRecvCanFd for DngCanSocket {}
+// impl HasSendCanFd for DngCanSocket {}
 
 /* HARDWARE IDENTIFICATION */
 

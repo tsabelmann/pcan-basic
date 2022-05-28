@@ -19,7 +19,7 @@ use crate::info::{
     HasNominalBusSpeed,
 };
 use crate::pcan;
-use crate::socket::{Baudrate, HasCanRead, HasCanReadFd, HasCanWrite, HasCanWriteFd, Socket};
+use crate::socket::{Baudrate, HasRecvCan, HasRecvCanFd, HasSendCan, HasSendCanFd, Socket};
 use crate::trace::{
     HasSetTraceConfigure, HasSetTraceLocation, HasSetTraceSize, HasSetTraceStatus,
     HasTraceConfigure, HasTraceLocation, HasTraceSize, HasTraceStatus,
@@ -68,10 +68,11 @@ impl Channel for IsaCanSocket {
 
 /* CAN trait implementations */
 
-impl HasCanRead for IsaCanSocket {}
-impl HasCanReadFd for IsaCanSocket {}
-impl HasCanWrite for IsaCanSocket {}
-impl HasCanWriteFd for IsaCanSocket {}
+impl HasRecvCan for IsaCanSocket {}
+impl HasSendCan for IsaCanSocket {}
+
+// impl HasRecvCanFd for IsaCanSocket {}
+// impl HasSendCanFd for IsaCanSocket {}
 
 /* HARDWARE IDENTIFICATION */
 

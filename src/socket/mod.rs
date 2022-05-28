@@ -285,30 +285,30 @@ impl CanSocket {
     }
 }
 
-trait HasCanRead {}
+trait HasRecvCan {}
 
-pub trait CanRead {
-    fn read(&self) -> Result<(CanFrame, Timestamp), PcanError>;
-    fn read_frame(&self) -> Result<CanFrame, PcanError>;
+pub trait RecvCan {
+    fn recv(&self) -> Result<(CanFrame, Timestamp), PcanError>;
+    fn recv_frame(&self) -> Result<CanFrame, PcanError>;
 }
 
-trait HasCanReadFd {}
+trait HasRecvCanFd {}
 
-pub trait CanReadFd {
-    fn read_fd(&self) -> Result<(CanFdFrame, u64), PcanError>;
-    fn read_fd_frame(&self) -> Result<CanFdFrame, PcanError>;
+pub trait RecvCanFd {
+    fn recv_fd(&self) -> Result<(CanFdFrame, u64), PcanError>;
+    fn recv_fd_frame(&self) -> Result<CanFdFrame, PcanError>;
 }
 
-trait HasCanWrite {}
+trait HasSendCan {}
 
-pub trait CanWrite {
-    fn write(&self, frame: CanFrame) -> Result<(), PcanError>;
+pub trait SendCan {
+    fn send(&self, frame: CanFrame) -> Result<(), PcanError>;
 }
 
-trait HasCanWriteFd {}
+trait HasSendCanFd {}
 
-pub trait CanWriteFd {
-    fn write_fd(&self, frame: CanFdFrame) -> Result<(), PcanError>;
+pub trait SendCanFd {
+    fn send_fd(&self, frame: CanFdFrame) -> Result<(), PcanError>;
 }
 
 trait Socket {
@@ -359,8 +359,8 @@ impl From<Baudrate> for u16 {
 
 /* CanRead trait implementation */
 
-impl<T: Socket + HasCanRead> CanRead for T {
-    fn read(&self) -> Result<(CanFrame, Timestamp), PcanError> {
+impl<T: HasRecvCan + Socket> RecvCan for T {
+    fn recv(&self) -> Result<(CanFrame, Timestamp), PcanError> {
         let mut frame = CanFrame::default();
         let mut timestamp = Timestamp::default();
 
@@ -379,7 +379,7 @@ impl<T: Socket + HasCanRead> CanRead for T {
         }
     }
 
-    fn read_frame(&self) -> Result<CanFrame, PcanError> {
+    fn recv_frame(&self) -> Result<CanFrame, PcanError> {
         let mut frame = CanFrame::default();
 
         let error_code = unsafe {
@@ -398,10 +398,10 @@ impl<T: Socket + HasCanRead> CanRead for T {
     }
 }
 
-/* CanFdRead trait implementation */
+/* CanRecvFd trait implementation */
 
-impl<T: Socket + HasCanReadFd> CanReadFd for T {
-    fn read_fd(&self) -> Result<(CanFdFrame, u64), PcanError> {
+impl<T: HasRecvCanFd + Socket> RecvCanFd for T {
+    fn recv_fd(&self) -> Result<(CanFdFrame, u64), PcanError> {
         let mut frame = CanFdFrame::default();
         let mut timestamp = 0u64;
 
@@ -420,7 +420,7 @@ impl<T: Socket + HasCanReadFd> CanReadFd for T {
         }
     }
 
-    fn read_fd_frame(&self) -> Result<CanFdFrame, PcanError> {
+    fn recv_fd_frame(&self) -> Result<CanFdFrame, PcanError> {
         let mut frame = CanFdFrame::default();
 
         let error_code = unsafe {
@@ -439,10 +439,10 @@ impl<T: Socket + HasCanReadFd> CanReadFd for T {
     }
 }
 
-/* CanWrite trait implementations */
+/* CanSend trait implementations */
 
-impl<T: Socket + HasCanWrite> CanWrite for T {
-    fn write(&self, frame: CanFrame) -> Result<(), PcanError> {
+impl<T: HasSendCan + Socket> SendCan for T {
+    fn send(&self, frame: CanFrame) -> Result<(), PcanError> {
         let mut frame = frame;
         let error_code =
             unsafe { pcan::CAN_Write(self.handle(), &mut frame.frame as *mut pcan::TPCANMsg) };
@@ -455,10 +455,10 @@ impl<T: Socket + HasCanWrite> CanWrite for T {
     }
 }
 
-/* CanWriteFd trait implementation */
+/* CanSendFd trait implementation */
 
-impl<T: Socket + HasCanWriteFd> CanWriteFd for T {
-    fn write_fd(&self, frame: CanFdFrame) -> Result<(), PcanError> {
+impl<T: HasSendCanFd + Socket> SendCanFd for T {
+    fn send_fd(&self, frame: CanFdFrame) -> Result<(), PcanError> {
         let mut frame = frame;
         let error_code =
             unsafe { pcan::CAN_WriteFD(self.handle(), &mut frame.frame as *mut pcan::TPCANMsgFD) };

@@ -25,7 +25,7 @@ use crate::io::{
     HasSetDigitalConfiguration, HasSetDigitalSet, HasSetDigitalValue,
 };
 use crate::pcan;
-use crate::socket::{Baudrate, HasCanRead, HasCanReadFd, HasCanWrite, HasCanWriteFd, Socket};
+use crate::socket::{Baudrate, HasRecvCan, HasRecvCanFd, HasSendCan, HasSendCanFd, Socket};
 use crate::special::{
     HasBusOffAutoreset, HasFiveVoltsPower, HasInterframeDelay, HasListenOnly,
     HasSetBusOffAutoreset, HasSetFiveVoltsPower, HasSetInterframeDelay, HasSetListenOnly,
@@ -79,10 +79,11 @@ impl Channel for UsbCanSocket {
 
 /* CAN trait implementations */
 
-impl HasCanRead for UsbCanSocket {}
-impl HasCanReadFd for UsbCanSocket {}
-impl HasCanWrite for UsbCanSocket {}
-impl HasCanWriteFd for UsbCanSocket {}
+impl HasRecvCan for UsbCanSocket {}
+impl HasSendCan for UsbCanSocket {}
+
+impl HasRecvCanFd for UsbCanSocket {}
+impl HasSendCanFd for UsbCanSocket {}
 
 /* HARDWARE IDENTIFICATION */
 

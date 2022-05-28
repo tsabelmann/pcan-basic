@@ -19,7 +19,7 @@ use crate::info::{
     HasNominalBusSpeed,
 };
 use crate::pcan;
-use crate::socket::{Baudrate, HasCanRead, HasCanReadFd, HasCanWrite, HasCanWriteFd, Socket};
+use crate::socket::{Baudrate, HasRecvCan, HasRecvCanFd, HasSendCan, HasSendCanFd, Socket};
 use crate::special::{HasFiveVoltsPower, HasSetFiveVoltsPower};
 use crate::trace::{
     HasSetTraceConfigure, HasSetTraceLocation, HasSetTraceSize, HasSetTraceStatus,
@@ -70,10 +70,11 @@ impl Channel for PccCanSocket {
 
 /* CAN trait implementations */
 
-impl HasCanRead for PccCanSocket {}
-impl HasCanReadFd for PccCanSocket {}
-impl HasCanWrite for PccCanSocket {}
-impl HasCanWriteFd for PccCanSocket {}
+impl HasRecvCan for PccCanSocket {}
+impl HasSendCan for PccCanSocket {}
+
+impl HasRecvCanFd for PccCanSocket {}
+impl HasSendCanFd for PccCanSocket {}
 
 /* HARDWARE IDENTIFICATION */
 
