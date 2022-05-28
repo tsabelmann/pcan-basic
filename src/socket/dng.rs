@@ -21,8 +21,8 @@ use crate::info::{
 use crate::pcan;
 use crate::socket::{Baudrate, HasCanRead, HasCanReadFd, HasCanWrite, HasCanWriteFd, Socket};
 use crate::trace::{
-    HasSetTraceLocation, HasSetTraceSize, HasSetTraceStatus, HasTraceLocation, HasTraceSize,
-    HasTraceStatus,
+    HasSetTraceConfigure, HasSetTraceLocation, HasSetTraceSize, HasSetTraceStatus,
+    HasTraceConfigure, HasTraceLocation, HasTraceSize, HasTraceStatus,
 };
 
 #[derive(Debug, PartialEq)]
@@ -132,3 +132,6 @@ impl HasSetTraceStatus for DngCanSocket {}
 
 impl HasTraceSize for DngCanSocket {}
 impl HasSetTraceSize for DngCanSocket {}
+
+impl HasTraceConfigure for DngCanSocket {}
+impl HasSetTraceConfigure for DngCanSocket {}
