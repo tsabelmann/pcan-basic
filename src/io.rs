@@ -305,3 +305,31 @@ impl<T: HasSetDigitalValue + Channel> SetDigitalValue for T {
         }
     }
 }
+
+/* IO ANALOG VALUE */
+
+pub(crate) trait HasAnalogValue {}
+
+pub trait AnalogValue {
+    fn value(&self) -> Result<u32, PcanError>;
+}
+
+impl<T: HasAnalogValue + Channel> AnalogValue for T {
+    fn value(&self) -> Result<u32, PcanError> {
+        let mut data = [0u8; 4];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_IO_ANALOG_VALUE as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => Ok(u32::from_le_bytes(data)),
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
