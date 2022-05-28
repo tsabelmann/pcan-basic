@@ -22,7 +22,7 @@ use crate::info::{
 };
 use crate::pcan;
 use crate::socket::{Baudrate, HasCanRead, HasCanReadFd, HasCanWrite, HasCanWriteFd, Socket};
-use crate::trace::{HasSetTraceLocation, HasTraceLocation};
+use crate::trace::{HasSetTraceLocation, HasSetTraceStatus, HasTraceLocation, HasTraceStatus};
 
 #[derive(Debug, PartialEq)]
 pub struct LanCanSocket {
@@ -133,3 +133,6 @@ impl HasSetAcceptanceFilter29Bit for LanCanSocket {}
 
 impl HasTraceLocation for LanCanSocket {}
 impl HasSetTraceLocation for LanCanSocket {}
+
+impl HasTraceStatus for LanCanSocket {}
+impl HasSetTraceStatus for LanCanSocket {}
