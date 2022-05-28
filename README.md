@@ -33,6 +33,7 @@ you want to use this crate. However, most features should be stable so not much 
 - [x] Trace features
 - [x] IO features
 - [x] Many example files to choose from
+- [ ] Proper wrapper and access methods about Timestamp
 - [ ] Proper documentation for each part of the API
 - [ ] Implementation of the special API 
 - [ ] Implementation of CanFd sockets
