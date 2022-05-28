@@ -20,6 +20,7 @@ use crate::info::{
 };
 use crate::pcan;
 use crate::socket::{Baudrate, HasCanRead, HasCanReadFd, HasCanWrite, HasCanWriteFd, Socket};
+use crate::trace::{HasSetTraceLocation, HasTraceLocation};
 
 #[derive(Debug, PartialEq)]
 pub struct DngCanSocket {
@@ -117,3 +118,8 @@ impl HasSetAcceptanceFilter11Bit for DngCanSocket {}
 
 impl HasAcceptanceFilter29Bit for DngCanSocket {}
 impl HasSetAcceptanceFilter29Bit for DngCanSocket {}
+
+/* TRACING PARAMETERS */
+
+impl HasTraceLocation for DngCanSocket {}
+impl HasSetTraceLocation for DngCanSocket {}
