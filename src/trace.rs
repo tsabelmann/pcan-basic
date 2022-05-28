@@ -138,3 +138,61 @@ impl<T: HasSetTraceStatus + Channel> SetTraceStatus for T {
         }
     }
 }
+
+/* TRACE SIZE traits */
+
+pub(crate) trait HasTraceSize {}
+
+pub trait TraceSize {
+    fn trace_size(&self) -> Result<u8, PcanError>;
+}
+
+impl<T: HasTraceSize + Channel> TraceSize for T {
+    fn trace_size(&self) -> Result<u8, PcanError> {
+        let mut data = [0u8; 4];
+        let code = unsafe {
+            pcan::CAN_GetValue(
+                self.channel(),
+                pcan::PCAN_TRACE_SIZE as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => Ok(data[0]),
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
+pub(crate) trait HasSetTraceSize {}
+
+pub trait SetTraceSize {
+    fn set_trace_size(&self, size_mb: u8) -> Result<(), PcanError>;
+}
+
+impl<T: HasSetTraceSize + Channel> SetTraceSize for T {
+    fn set_trace_size(&self, size_mb: u8) -> Result<(), PcanError> {
+        let mut data = [size_mb];
+        let code = unsafe {
+            pcan::CAN_SetValue(
+                self.channel(),
+                pcan_basic_sys::PCAN_TRACE_SIZE as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => Ok(()),
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
+pub fn set_default_trace_size<T: SetTraceSize>(value: &T) -> Result<(), PcanError> {
+    value.set_trace_size(0)
+}
