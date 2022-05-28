@@ -12,8 +12,8 @@ fn main() {
         }
     };
 
-    match can_socket.value() {
-        Ok(value) => println!("value={:?}", value),
+    match can_socket.analog_value() {
+        Ok(analog_value) => println!("analog_value={:?}", analog_value),
         Err(err) => println!("{:?}", err),
     }
 }

@@ -12,8 +12,8 @@ fn main() {
         }
     };
 
-    match can_socket.value(0) {
-        Ok(value) => println!("value={:?}", value),
+    match can_socket.digital_value(0) {
+        Ok(digital_value) => println!("digital_value={:?}", digital_value),
         Err(err) => println!("{:?}", err),
     }
 }

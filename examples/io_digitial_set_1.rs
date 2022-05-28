@@ -12,12 +12,12 @@ fn main() {
         }
     };
 
-    match can_socket.set_mode_word(0xFF_FF_FF_FF) {
+    match can_socket.set_digital_mode_word(0xFF_FF_FF_FF) {
         Ok(_) => {}
         Err(err) => println!("{:?}", err),
     }
 
-    match can_socket.set(0xFF_00_00_FF) {
+    match can_socket.digital_set(0xFF_00_00_FF) {
         Ok(_) => {}
         Err(err) => println!("{:?}", err),
     }
