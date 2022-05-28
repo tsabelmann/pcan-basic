@@ -20,6 +20,7 @@ use crate::info::{
     HasBitrateInfo, HasChannelFeatures, HasChannelVersion, HasDataBusSpeed, HasFirmwareVersion,
     HasNominalBusSpeed,
 };
+use crate::io::{HasDigitalConfiguration, HasSetDigitalConfiguration};
 use crate::pcan;
 use crate::socket::{Baudrate, HasCanRead, HasCanReadFd, HasCanWrite, HasCanWriteFd, Socket};
 use crate::special::{
@@ -161,3 +162,8 @@ impl HasSetTraceSize for UsbCanSocket {}
 
 impl HasTraceConfigure for UsbCanSocket {}
 impl HasSetTraceConfigure for UsbCanSocket {}
+
+/* ELECTRONIC CIRCUITS PARAMETERS */
+
+impl HasDigitalConfiguration for UsbCanSocket {}
+impl HasSetDigitalConfiguration for UsbCanSocket {}
