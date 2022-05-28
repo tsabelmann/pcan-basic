@@ -26,7 +26,7 @@ use crate::special::{
     HasBusOffAutoreset, HasFiveVoltsPower, HasInterframeDelay, HasListenOnly,
     HasSetBusOffAutoreset, HasSetFiveVoltsPower, HasSetInterframeDelay, HasSetListenOnly,
 };
-use crate::trace::{HasSetTraceLocation, HasTraceLocation};
+use crate::trace::{HasSetTraceLocation, HasSetTraceStatus, HasTraceLocation, HasTraceStatus};
 
 #[derive(Debug, PartialEq)]
 pub struct UsbCanSocket {
@@ -149,3 +149,6 @@ impl HasSetAcceptanceFilter29Bit for UsbCanSocket {}
 
 impl HasTraceLocation for UsbCanSocket {}
 impl HasSetTraceLocation for UsbCanSocket {}
+
+impl HasTraceStatus for UsbCanSocket {}
+impl HasSetTraceStatus for UsbCanSocket {}
