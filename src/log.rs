@@ -186,3 +186,21 @@ pub fn configure_log(config: LogFunction) -> Result<(), PcanError> {
         Err(_) => Err(PcanError::Unknown),
     }
 }
+
+pub fn log_text<S: AsRef<str>>(text: S) -> Result<(), PcanError> {
+    let mut data = String::from(text.as_ref());
+    let code = unsafe {
+        pcan::CAN_SetValue(
+            pcan::PCAN_NONEBUS as u16,
+            pcan_basic_sys::PCAN_LOG_TEXT as u8,
+            data.as_mut_ptr() as *mut c_void,
+            data.len() as u32,
+        )
+    };
+
+    match PcanOkError::try_from(code) {
+        Ok(PcanOkError::Ok) => Ok(()),
+        Ok(PcanOkError::Err(err)) => Err(err),
+        Err(_) => Err(PcanError::Unknown),
+    }
+}
