@@ -50,6 +50,10 @@ pub fn set_log_location<P: AsRef<Path>>(path: P) -> Result<(), PcanError> {
     }
 }
 
+pub fn set_default_log_location() -> Result<(), PcanError> {
+    set_log_location("")
+}
+
 pub fn is_logging() -> Result<bool, PcanError> {
     let mut data = [0u8; 4];
     let code = unsafe {
