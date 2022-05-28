@@ -82,8 +82,8 @@ impl Channel for UsbCanSocket {
 impl HasRecvCan for UsbCanSocket {}
 impl HasSendCan for UsbCanSocket {}
 
-impl HasRecvCanFd for UsbCanSocket {}
-impl HasSendCanFd for UsbCanSocket {}
+// impl HasRecvCanFd for UsbCanSocket {}
+// impl HasSendCanFd for UsbCanSocket {}
 
 /* HARDWARE IDENTIFICATION */
 

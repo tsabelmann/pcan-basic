@@ -73,8 +73,8 @@ impl Channel for PccCanSocket {
 impl HasRecvCan for PccCanSocket {}
 impl HasSendCan for PccCanSocket {}
 
-impl HasRecvCanFd for PccCanSocket {}
-impl HasSendCanFd for PccCanSocket {}
+// impl HasRecvCanFd for PccCanSocket {}
+// impl HasSendCanFd for PccCanSocket {}
 
 /* HARDWARE IDENTIFICATION */
 
