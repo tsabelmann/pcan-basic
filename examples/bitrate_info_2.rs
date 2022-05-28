@@ -1,5 +1,4 @@
 use pcan_basic::bus::UsbBus;
-use pcan_basic::error::PcanError;
 use pcan_basic::info::BitrateInfo;
 use pcan_basic::socket::usb::UsbCanSocket;
 use pcan_basic::socket::Baudrate;
