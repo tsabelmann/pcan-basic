@@ -21,7 +21,8 @@ use crate::info::{
     HasNominalBusSpeed,
 };
 use crate::io::{
-    HasDigitalConfiguration, HasDigitalValue, HasSetDigitalConfiguration, HasSetDigitalValue,
+    HasAnalogValue, HasDigitalConfiguration, HasDigitalValue, HasSetDigitalConfiguration,
+    HasSetDigitalValue,
 };
 use crate::pcan;
 use crate::socket::{Baudrate, HasCanRead, HasCanReadFd, HasCanWrite, HasCanWriteFd, Socket};
@@ -172,3 +173,5 @@ impl HasSetDigitalConfiguration for UsbCanSocket {}
 
 impl HasDigitalValue for UsbCanSocket {}
 impl HasSetDigitalValue for UsbCanSocket {}
+
+impl HasAnalogValue for UsbCanSocket {}
