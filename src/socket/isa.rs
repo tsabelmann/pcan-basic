@@ -20,7 +20,7 @@ use crate::info::{
 };
 use crate::pcan;
 use crate::socket::{Baudrate, HasCanRead, HasCanReadFd, HasCanWrite, HasCanWriteFd, Socket};
-use crate::trace::{HasSetTraceLocation, HasTraceLocation};
+use crate::trace::{HasSetTraceLocation, HasSetTraceStatus, HasTraceLocation, HasTraceStatus};
 
 #[derive(Debug, PartialEq)]
 pub struct IsaCanSocket {
@@ -122,3 +122,6 @@ impl HasSetAcceptanceFilter29Bit for IsaCanSocket {}
 
 impl HasTraceLocation for IsaCanSocket {}
 impl HasSetTraceLocation for IsaCanSocket {}
+
+impl HasTraceStatus for IsaCanSocket {}
+impl HasSetTraceStatus for IsaCanSocket {}
