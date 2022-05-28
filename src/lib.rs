@@ -8,6 +8,7 @@ pub mod df;
 pub mod error;
 pub mod hw;
 pub mod info;
+pub mod io;
 pub mod log;
 pub mod socket;
 pub mod special;
