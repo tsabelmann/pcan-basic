@@ -1,8 +1,7 @@
 use pcan_basic::bus::UsbBus;
-use pcan_basic::error::PcanError;
 use pcan_basic::socket::usb::UsbCanSocket;
+use pcan_basic::socket::CanFrame;
 use pcan_basic::socket::{Baudrate, MessageType, SendCan};
-use pcan_basic::socket::{CanFrame, RecvCan};
 use std::thread::sleep;
 use std::time::Duration;
 
