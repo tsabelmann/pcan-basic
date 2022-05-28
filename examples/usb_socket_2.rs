@@ -1,8 +1,8 @@
 use pcan_basic::bus::UsbBus;
 use pcan_basic::error::PcanError;
 use pcan_basic::socket::usb::UsbCanSocket;
-use pcan_basic::socket::{Baudrate, CanWrite, MessageType};
-use pcan_basic::socket::{CanFrame, CanRead};
+use pcan_basic::socket::{Baudrate, MessageType, SendCan};
+use pcan_basic::socket::{CanFrame, RecvCan};
 use std::thread::sleep;
 use std::time::Duration;
 
@@ -21,7 +21,7 @@ fn main() {
         let can_frame = CanFrame::new(0x2_FF, MessageType::Extended, &[counter]).unwrap();
         counter += 1;
 
-        let result = usb_socket.write(can_frame);
+        let result = usb_socket.send(can_frame);
         if result.is_ok() {
             println!("Is OK!");
         }

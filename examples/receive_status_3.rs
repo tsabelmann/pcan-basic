@@ -2,7 +2,7 @@ use pcan_basic::bus::UsbBus;
 use pcan_basic::df::{ReceiveStatus, SetReceiveStatus};
 use pcan_basic::socket::usb::UsbCanSocket;
 use pcan_basic::socket::Baudrate;
-use pcan_basic::socket::CanRead;
+use pcan_basic::socket::RecvCan;
 use std::time::{Duration, Instant};
 
 fn main() {
@@ -26,7 +26,7 @@ fn main() {
 
     let now = Instant::now();
     while now.elapsed() <= Duration::from_secs(20) {
-        let can_frame = can_socket.read();
+        let can_frame = can_socket.recv();
         match can_frame {
             Ok((frame, timestamp)) => {
                 println!("{:?}", frame);
@@ -49,7 +49,7 @@ fn main() {
     }
 
     loop {
-        let can_frame = can_socket.read();
+        let can_frame = can_socket.recv();
         match can_frame {
             Ok((frame, timestamp)) => {
                 println!("{:?}", frame);

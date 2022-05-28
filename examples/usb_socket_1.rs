@@ -3,7 +3,7 @@ use pcan_basic::error::PcanError;
 use pcan_basic::hw::SetChannelIdentifying;
 use pcan_basic::socket::usb::UsbCanSocket;
 use pcan_basic::socket::Baudrate;
-use pcan_basic::socket::{CanFrame, CanRead};
+use pcan_basic::socket::{CanFrame, RecvCan};
 
 fn main() {
     let usb_socket = match UsbCanSocket::open(UsbBus::USB1, Baudrate::Baud500K) {
@@ -15,7 +15,7 @@ fn main() {
     };
 
     loop {
-        let can_frame = usb_socket.read();
+        let can_frame = usb_socket.recv();
         match can_frame {
             Ok((frame, timestamp)) => {
                 println!("{:?}", frame);

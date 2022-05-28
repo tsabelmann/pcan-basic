@@ -2,7 +2,7 @@ use pcan_basic::bus::UsbBus;
 use pcan_basic::df::{AcceptanceFilter11Bit, AcceptanceFilter29Bit, SetAcceptanceFilter11Bit};
 use pcan_basic::socket::usb::UsbCanSocket;
 use pcan_basic::socket::Baudrate;
-use pcan_basic::socket::CanRead;
+use pcan_basic::socket::RecvCan;
 
 fn main() {
     let usb_socket = match UsbCanSocket::open(UsbBus::USB1, Baudrate::Baud500K) {
