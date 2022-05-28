@@ -306,6 +306,62 @@ impl<T: HasSetDigitalValue + Channel> SetDigitalValue for T {
     }
 }
 
+/* IO DIGITAL SET */
+
+pub(crate) trait HasSetDigitalSet {}
+
+pub trait SetDigitalSet {
+    fn set(&self, mask: u32) -> Result<(), PcanError>;
+}
+
+impl<T: HasSetDigitalSet + Channel> SetDigitalSet for T {
+    fn set(&self, mask: u32) -> Result<(), PcanError> {
+        let mut data = mask.to_le_bytes();
+        let code = unsafe {
+            pcan::CAN_SetValue(
+                self.channel(),
+                pcan::PCAN_IO_DIGITAL_SET as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => Ok(()),
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
+/* IO DIGITAL CLEAR */
+
+pub(crate) trait HasSetDigitalClear {}
+
+pub trait SetDigitalClear {
+    fn clear(&self, mask: u32) -> Result<(), PcanError>;
+}
+
+impl<T: HasSetDigitalClear + Channel> SetDigitalClear for T {
+    fn clear(&self, mask: u32) -> Result<(), PcanError> {
+        let mut data = mask.to_le_bytes();
+        let code = unsafe {
+            pcan::CAN_SetValue(
+                self.channel(),
+                pcan::PCAN_IO_DIGITAL_CLEAR as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        };
+
+        match PcanOkError::try_from(code) {
+            Ok(PcanOkError::Ok) => Ok(()),
+            Ok(PcanOkError::Err(err)) => Err(err),
+            Err(_) => Err(PcanError::Unknown),
+        }
+    }
+}
+
 /* IO ANALOG VALUE */
 
 pub(crate) trait HasAnalogValue {}
