@@ -22,8 +22,8 @@ use crate::pcan;
 use crate::socket::{Baudrate, HasCanRead, HasCanReadFd, HasCanWrite, HasCanWriteFd, Socket};
 use crate::special::{HasFiveVoltsPower, HasSetFiveVoltsPower};
 use crate::trace::{
-    HasSetTraceLocation, HasSetTraceSize, HasSetTraceStatus, HasTraceLocation, HasTraceSize,
-    HasTraceStatus,
+    HasSetTraceConfigure, HasSetTraceLocation, HasSetTraceSize, HasSetTraceStatus,
+    HasTraceConfigure, HasTraceLocation, HasTraceSize, HasTraceStatus,
 };
 
 #[derive(Debug, PartialEq)]
@@ -136,3 +136,6 @@ impl HasSetTraceStatus for PccCanSocket {}
 
 impl HasTraceSize for PccCanSocket {}
 impl HasSetTraceSize for PccCanSocket {}
+
+impl HasTraceConfigure for PccCanSocket {}
+impl HasSetTraceConfigure for PccCanSocket {}
