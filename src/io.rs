@@ -40,12 +40,12 @@ impl From<IOConfig> for u32 {
 pub(crate) trait HasDigitalConfiguration {}
 
 pub trait DigitalConfiguration {
-    fn mode(&self, pin: u8) -> Result<IOConfig, PcanError>;
-    fn mode_word(&self) -> Result<u32, PcanError>;
+    fn digital_mode(&self, pin: u8) -> Result<IOConfig, PcanError>;
+    fn digital_mode_word(&self) -> Result<u32, PcanError>;
 }
 
 impl<T: HasDigitalConfiguration + Channel> DigitalConfiguration for T {
-    fn mode(&self, pin: u8) -> Result<IOConfig, PcanError> {
+    fn digital_mode(&self, pin: u8) -> Result<IOConfig, PcanError> {
         let mut data = [0u8; 4];
         let code = unsafe {
             pcan::CAN_GetValue(
@@ -72,7 +72,7 @@ impl<T: HasDigitalConfiguration + Channel> DigitalConfiguration for T {
         }
     }
 
-    fn mode_word(&self) -> Result<u32, PcanError> {
+    fn digital_mode_word(&self) -> Result<u32, PcanError> {
         let mut data = [0u8; 4];
         let code = unsafe {
             pcan::CAN_GetValue(
@@ -94,12 +94,12 @@ impl<T: HasDigitalConfiguration + Channel> DigitalConfiguration for T {
 pub(crate) trait HasSetDigitalConfiguration {}
 
 pub trait SetDigitalConfiguration {
-    fn set_mode(&self, pin: u8, mode: IOConfig) -> Result<(), PcanError>;
-    fn set_mode_word(&self, mode_word: u32) -> Result<(), PcanError>;
+    fn set_digital_mode(&self, pin: u8, mode: IOConfig) -> Result<(), PcanError>;
+    fn set_digital_mode_word(&self, mode_word: u32) -> Result<(), PcanError>;
 }
 
 impl<T: HasSetDigitalConfiguration + Channel> SetDigitalConfiguration for T {
-    fn set_mode(&self, pin: u8, mode: IOConfig) -> Result<(), PcanError> {
+    fn set_digital_mode(&self, pin: u8, mode: IOConfig) -> Result<(), PcanError> {
         let mut data = [0u8; 4];
         let code = unsafe {
             pcan::CAN_GetValue(
@@ -138,7 +138,7 @@ impl<T: HasSetDigitalConfiguration + Channel> SetDigitalConfiguration for T {
         };
     }
 
-    fn set_mode_word(&self, mode_word: u32) -> Result<(), PcanError> {
+    fn set_digital_mode_word(&self, mode_word: u32) -> Result<(), PcanError> {
         let mut data = mode_word.to_le_bytes();
         let code = unsafe {
             pcan::CAN_SetValue(
@@ -189,12 +189,12 @@ impl From<IOValue> for u32 {
 pub(crate) trait HasDigitalValue {}
 
 pub trait DigitalValue {
-    fn value(&self, pin: u8) -> Result<IOValue, PcanError>;
-    fn value_word(&self) -> Result<u32, PcanError>;
+    fn digital_value(&self, pin: u8) -> Result<IOValue, PcanError>;
+    fn digital_value_word(&self) -> Result<u32, PcanError>;
 }
 
 impl<T: HasSetDigitalValue + Channel> DigitalValue for T {
-    fn value(&self, pin: u8) -> Result<IOValue, PcanError> {
+    fn digital_value(&self, pin: u8) -> Result<IOValue, PcanError> {
         let mut data = [0u8; 4];
         let code = unsafe {
             pcan::CAN_GetValue(
@@ -221,7 +221,7 @@ impl<T: HasSetDigitalValue + Channel> DigitalValue for T {
         }
     }
 
-    fn value_word(&self) -> Result<u32, PcanError> {
+    fn digital_value_word(&self) -> Result<u32, PcanError> {
         let mut data = [0u8; 4];
         let code = unsafe {
             pcan::CAN_GetValue(
@@ -243,12 +243,12 @@ impl<T: HasSetDigitalValue + Channel> DigitalValue for T {
 pub(crate) trait HasSetDigitalValue {}
 
 pub trait SetDigitalValue {
-    fn set_value(&self, pin: u8, value: IOValue) -> Result<(), PcanError>;
-    fn set_value_word(&self, value_word: u32) -> Result<(), PcanError>;
+    fn set_digital_value(&self, pin: u8, value: IOValue) -> Result<(), PcanError>;
+    fn set_digital_value_word(&self, value_word: u32) -> Result<(), PcanError>;
 }
 
 impl<T: HasSetDigitalValue + Channel> SetDigitalValue for T {
-    fn set_value(&self, pin: u8, value: IOValue) -> Result<(), PcanError> {
+    fn set_digital_value(&self, pin: u8, value: IOValue) -> Result<(), PcanError> {
         let mut data = [0u8; 4];
         let code = unsafe {
             pcan::CAN_GetValue(
@@ -287,7 +287,7 @@ impl<T: HasSetDigitalValue + Channel> SetDigitalValue for T {
         };
     }
 
-    fn set_value_word(&self, value_word: u32) -> Result<(), PcanError> {
+    fn set_digital_value_word(&self, value_word: u32) -> Result<(), PcanError> {
         let mut data = value_word.to_le_bytes();
         let code = unsafe {
             pcan::CAN_SetValue(
@@ -311,11 +311,11 @@ impl<T: HasSetDigitalValue + Channel> SetDigitalValue for T {
 pub(crate) trait HasSetDigitalSet {}
 
 pub trait SetDigitalSet {
-    fn set(&self, mask: u32) -> Result<(), PcanError>;
+    fn digital_set(&self, mask: u32) -> Result<(), PcanError>;
 }
 
 impl<T: HasSetDigitalSet + Channel> SetDigitalSet for T {
-    fn set(&self, mask: u32) -> Result<(), PcanError> {
+    fn digital_set(&self, mask: u32) -> Result<(), PcanError> {
         let mut data = mask.to_le_bytes();
         let code = unsafe {
             pcan::CAN_SetValue(
@@ -339,11 +339,11 @@ impl<T: HasSetDigitalSet + Channel> SetDigitalSet for T {
 pub(crate) trait HasSetDigitalClear {}
 
 pub trait SetDigitalClear {
-    fn clear(&self, mask: u32) -> Result<(), PcanError>;
+    fn digital_clear(&self, mask: u32) -> Result<(), PcanError>;
 }
 
 impl<T: HasSetDigitalClear + Channel> SetDigitalClear for T {
-    fn clear(&self, mask: u32) -> Result<(), PcanError> {
+    fn digital_clear(&self, mask: u32) -> Result<(), PcanError> {
         let mut data = mask.to_le_bytes();
         let code = unsafe {
             pcan::CAN_SetValue(
@@ -367,11 +367,11 @@ impl<T: HasSetDigitalClear + Channel> SetDigitalClear for T {
 pub(crate) trait HasAnalogValue {}
 
 pub trait AnalogValue {
-    fn value(&self) -> Result<u32, PcanError>;
+    fn analog_value(&self) -> Result<u32, PcanError>;
 }
 
 impl<T: HasAnalogValue + Channel> AnalogValue for T {
-    fn value(&self) -> Result<u32, PcanError> {
+    fn analog_value(&self) -> Result<u32, PcanError> {
         let mut data = [0u8; 4];
         let code = unsafe {
             pcan::CAN_GetValue(
