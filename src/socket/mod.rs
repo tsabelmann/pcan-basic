@@ -60,8 +60,8 @@ impl CanFrame {
                 }),
                 MessageType::Extended => Ok(CanFrame {
                     frame: pcan::TPCANMsg {
-                        ID: can_id & STANDARD_MASK,
-                        MSGTYPE: pcan::PCAN_MESSAGE_STANDARD as u8,
+                        ID: can_id & EXTENDED_MASK,
+                        MSGTYPE: pcan::PCAN_MESSAGE_EXTENDED as u8,
                         LEN: data.len() as u8,
                         DATA: frame_data,
                     },
