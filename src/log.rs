@@ -1,6 +1,4 @@
-//!
-//!
-//!
+//! Module providing a convenient interface to the 'Using Logging Parameters' functions.
 
 use crate::error::{PcanError, PcanOkError};
 use crate::pcan;
@@ -10,6 +8,9 @@ use std::ptr::null_mut;
 
 /* LOG LOCATION functions */
 
+///
+///
+///
 pub fn log_location() -> Result<PathBuf, PcanError> {
     let mut data = [0u8; pcan::MAX_LENGTH_VERSION_STRING as usize];
     let code = unsafe {
