@@ -1,7 +1,12 @@
+//!
+//!
+//!
+
 use crate::error::{PcanError, PcanOkError};
 use crate::pcan;
 use std::ffi::c_void;
 use std::path::{Path, PathBuf};
+use std::ptr::null_mut;
 
 /* LOG LOCATION functions */
 
@@ -36,13 +41,25 @@ pub fn set_log_location<P: AsRef<Path>>(path: P) -> Result<(), PcanError> {
         }
         Some(s) => String::from(s),
     };
-    let code = unsafe {
-        pcan::CAN_SetValue(
-            pcan::PCAN_NONEBUS as u16,
-            pcan::PCAN_LOG_LOCATION as u8,
-            data.as_mut_ptr() as *mut c_void,
-            data.len() as u32,
-        )
+
+    let code = if data.len() == 0 {
+        unsafe {
+            pcan::CAN_SetValue(
+                pcan::PCAN_NONEBUS as u16,
+                pcan::PCAN_LOG_LOCATION as u8,
+                null_mut() as *mut c_void,
+                0 as u32,
+            )
+        }
+    } else {
+        unsafe {
+            pcan::CAN_SetValue(
+                pcan::PCAN_NONEBUS as u16,
+                pcan::PCAN_LOG_LOCATION as u8,
+                data.as_mut_ptr() as *mut c_void,
+                data.len() as u32,
+            )
+        }
     };
 
     match PcanOkError::try_from(code) {
@@ -50,10 +67,6 @@ pub fn set_log_location<P: AsRef<Path>>(path: P) -> Result<(), PcanError> {
         Ok(PcanOkError::Err(err)) => Err(err),
         Err(_) => Err(PcanError::Unknown),
     }
-}
-
-pub fn set_default_log_location() -> Result<(), PcanError> {
-    set_log_location(" ")
 }
 
 /* LOG STATUS functions */
