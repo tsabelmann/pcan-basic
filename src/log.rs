@@ -1,4 +1,4 @@
-//! Module providing a convenient interface to the 'Using Logging Parameters' functions.
+//! Module providing a convenient interface mentioned in the 'Using Logging Parameters' chapter.
 
 use crate::error::{PcanError, PcanOkError};
 use crate::pcan;
