@@ -8,9 +8,20 @@ use std::ptr::null_mut;
 
 /* LOG LOCATION functions */
 
+/// Retrieves the log location path.
 ///
+/// Tries to retrieve the log location path. If the function succeeds,
+/// a [PathBuf](std::path::PathBuf) is returned. Otherwise, it returns a
+/// [PcanError](crate::error::PcanError).
 ///
-///
+/// # Example
+/// ```
+/// use pcan_basic::log::log_location;
+/// match log_location() {
+///     Ok(path) => println!("The path: {:?}", path),
+///     Err(error) => println!("The error: {:?}", error)
+/// }
+/// ```
 pub fn log_location() -> Result<PathBuf, PcanError> {
     let mut data = [0u8; pcan::MAX_LENGTH_VERSION_STRING as usize];
     let code = unsafe {
@@ -35,6 +46,19 @@ pub fn log_location() -> Result<PathBuf, PcanError> {
     }
 }
 
+/// Sets the log location path.
+///
+/// Tries to set the log location path. If the function succeeds, it returns the empty type.
+/// Otherwise, it returns a [PcanError](crate::error::PcanError).
+///
+/// # Example
+/// ```
+/// use pcan_basic::log::set_log_location;
+/// match set_log_location("/home/pi") {
+///     Ok(_) => println!("Successful!"),
+///     Err(error) => println!("The error: {:?}", error)
+/// }
+/// ```
 pub fn set_log_location<P: AsRef<Path>>(path: P) -> Result<(), PcanError> {
     let mut data = match path.as_ref().to_str() {
         None => {
@@ -68,6 +92,23 @@ pub fn set_log_location<P: AsRef<Path>>(path: P) -> Result<(), PcanError> {
         Ok(PcanOkError::Err(err)) => Err(err),
         Err(_) => Err(PcanError::Unknown),
     }
+}
+
+/// Resets the log location path to the default.
+///
+/// Tries to reset the log location path to the default. If the function succeeds, it returns the
+/// empty type. Otherwise, it returns a [PcanError](crate::error::PcanError).
+///
+/// # Example
+/// ```
+/// use pcan_basic::log::set_default_log_location;
+/// match set_default_log_location() {
+///     Ok(_) => println!("Successful!"),
+///     Err(error) => println!("The error: {:?}", error)
+/// }
+/// ```
+pub fn set_default_log_location() -> Result<(), PcanError> {
+    set_log_location("")
 }
 
 /* LOG STATUS functions */
