@@ -11,8 +11,8 @@ use std::ptr::null_mut;
 /// Retrieves the log location path.
 ///
 /// Tries to retrieve the log location path. If the function succeeds,
-/// a [PathBuf](std::path::PathBuf) is returned. Otherwise, it returns a
-/// [PcanError](crate::error::PcanError).
+/// a [PathBuf](PathBuf) is returned. Otherwise, it returns a
+/// [PcanError](PcanError).
 ///
 /// # Example
 /// ```
@@ -49,7 +49,7 @@ pub fn log_location() -> Result<PathBuf, PcanError> {
 /// Sets the log location path.
 ///
 /// Tries to set the log location path. If the function succeeds, it returns the empty type.
-/// Otherwise, it returns a [PcanError](crate::error::PcanError).
+/// Otherwise, it returns a [PcanError](PcanError).
 ///
 /// # Example
 /// ```
@@ -97,7 +97,7 @@ pub fn set_log_location<P: AsRef<Path>>(path: P) -> Result<(), PcanError> {
 /// Resets the log location path to the default.
 ///
 /// Tries to reset the log location path to the default. If the function succeeds, it returns the
-/// empty type. Otherwise, it returns a [PcanError](crate::error::PcanError).
+/// empty type. Otherwise, it returns a [PcanError](PcanError).
 ///
 /// # Example
 /// ```
@@ -113,6 +113,19 @@ pub fn set_default_log_location() -> Result<(), PcanError> {
 
 /* LOG STATUS functions */
 
+/// Retrieves the current logging status.
+///
+/// If the function succeeds, it returns either `true` or `false`. Otherwise, it returns a
+/// [PcanError](PcanError).
+///
+/// # Example
+/// ```
+/// use pcan_basic::log::is_logging;
+/// match is_logging() {
+///     Ok(status) => println!("Is logging: {}", status),
+///     Err(error) => println!("The error: {:?}", error)
+/// }
+/// ```
 pub fn is_logging() -> Result<bool, PcanError> {
     let mut data = [0u8; 4];
     let code = unsafe {
@@ -140,6 +153,19 @@ pub fn is_logging() -> Result<bool, PcanError> {
     }
 }
 
+/// Sets the logging active or inactive.
+///
+/// Tries to activate or deactivate logging. If the functions succeeds, the logging is either active
+/// or inactive. Otherwise, it returns a [PcanError](PcanError).
+///
+/// # Example
+/// ```
+/// use pcan_basic::log::set_logging;
+/// match set_logging(true) {
+///     Ok(_) => println!("Logging is now active!"),
+///     Err(error) => println!("The error: {:?}", error)
+/// }
+/// ```
 pub fn set_logging(enable: bool) -> Result<(), PcanError> {
     let mut data = match enable {
         true => pcan::PCAN_PARAMETER_ON.to_le_bytes(),
@@ -163,21 +189,20 @@ pub fn set_logging(enable: bool) -> Result<(), PcanError> {
 
 /* LOG CONFIGURE functions */
 
-///
-///
+/// Holds the log function variants.
 #[derive(PartialEq, Debug)]
 pub enum LogFunction {
-    /// Default
+    /// This value is always active.
     Default,
-    ///
+    /// Logs when a function is entered.
     Entry,
-    ///
+    /// Logs the parameters passed to a function.
     Parameters,
-    ///
+    /// Logs when a function is leaved and its return value.
     Leave,
-    ///
+    /// Logs the parameters and CAN data passed to the CAN_Write function.
     Write,
-    ///
+    /// Logs the parameters and CAN data received through the CAN_Read function.
     Read,
 }
 
@@ -210,6 +235,19 @@ impl From<LogFunction> for u32 {
     }
 }
 
+/// Retrieves the current log function.
+///
+/// Tries to retrieve the current log function. If the function succeeds, it returns a
+/// [LogFunction](LogFunction). Otherwise, it returns a [PcanError](PcanError).
+///
+/// # Example
+/// ```
+/// use pcan_basic::log::log_configuration;
+/// match log_configuration() { ///
+///     Ok(config) => println!("Log configuration: {:?}", config),
+///     Err(err) => println!("The error: {:?}", err),
+/// }
+/// ```
 pub fn log_configuration() -> Result<LogFunction, PcanError> {
     let mut data = [0u8; 4];
     let code = unsafe {
@@ -234,6 +272,19 @@ pub fn log_configuration() -> Result<LogFunction, PcanError> {
     }
 }
 
+/// Sets the log function.
+///
+/// Tries to set the current log function. If the function succeeds, it returns the empty type.
+/// Otherwise, it returns a [PcanError](PcanError).
+///
+/// # Example
+/// ```
+/// use pcan_basic::log::{configure_log, LogFunction};
+/// match configure_log(LogFunction::Parameters) {
+///     Ok(_) => println!("Successful!"),
+///     Err(err) => println!("The error: {:?}", err),
+/// }
+/// ```
 pub fn configure_log(config: LogFunction) -> Result<(), PcanError> {
     let mut data = u32::from(config).to_le_bytes();
     let code = unsafe {
@@ -254,7 +305,46 @@ pub fn configure_log(config: LogFunction) -> Result<(), PcanError> {
 
 /* LOG TEXT function */
 
-pub fn log_text<S: AsRef<str>>(text: S) -> Result<(), PcanError> {
+/// Inserts a text into the log file.
+///
+/// Tries to insert the text into the current log file. If the function succeeds, the text is
+/// inserted into the current log file. Otherwise, it returns a
+/// [PcanError](PcanError).
+///
+/// # Example
+/// ```
+/// use pcan_basic::log::{insert_log_text, is_logging, set_logging};
+/// println!("Set logging active!");
+/// match set_logging(true) {
+///     Ok(_) => println!("Successful!"),
+///     Err(err) => println!("{:?}", err),
+/// }
+///
+/// println!("Get current logging status");
+/// match is_logging() {
+///     Ok(is_logging) => println!("Is logging: {}", is_logging),
+/// Err(err) => println!("{:?}", err),
+/// }
+///
+/// println!("Set text");
+/// match insert_log_text("Hello World") {
+///     Ok(_) => println!("Successful!"),
+///     Err(err) => println!("{:?}", err),
+/// }
+///
+/// println!("Set logging inactive!");
+/// match set_logging(false) {
+///     Ok(_) => println!("Successful!"),
+///     Err(err) => println!("{:?}", err),
+/// }
+///
+/// println!("Get current logging status");
+/// match is_logging() {
+/// Ok(is_logging) => println!("Is logging: {}", is_logging),
+///     Err(err) => println!("{:?}", err),
+/// }
+/// ```
+pub fn insert_log_text<S: AsRef<str>>(text: S) -> Result<(), PcanError> {
     let mut data = String::from(text.as_ref());
     let code = unsafe {
         pcan::CAN_SetValue(
