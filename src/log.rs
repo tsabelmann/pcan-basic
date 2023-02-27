@@ -8,7 +8,7 @@ use std::ptr::null_mut;
 
 /* LOG LOCATION functions */
 
-/// Retrieves the log location path.
+/// Retrieves the current log location path.
 ///
 /// Tries to retrieve the log location path. If the function succeeds,
 /// a [PathBuf](PathBuf) is returned. Otherwise, it returns a
