@@ -9,7 +9,9 @@ pub mod pcc;
 pub mod pci;
 pub mod usb;
 
+use std::ops::Deref;
 use crate::bus::Bus;
+use crate::channel::Channel;
 use crate::error::{PcanError, PcanOkError};
 use crate::pcan;
 
@@ -311,9 +313,64 @@ pub trait SendCanFd {
     fn send_fd(&self, frame: CanFdFrame) -> Result<(), PcanError>;
 }
 
-trait Socket {
+pub trait Socket {
     fn handle(&self) -> u16;
 }
+
+pub trait ChannelOrSocket {
+    fn channel_or_handle(&self) -> u16;
+}
+
+impl ChannelOrSocket for dyn Channel {
+    fn channel_or_handle(&self) -> u16 {
+        Channel::channel(self)
+    }
+}
+
+impl ChannelOrSocket for dyn Socket {
+    fn channel_or_handle(&self) -> u16 {
+        Socket::handle(self)
+    }
+}
+
+// impl<T: Channel + 'static> From<T> for Box<dyn Channel> {
+//     fn from(value: T) -> Self {
+//         Box::new(value)
+//     }
+// }
+//
+// impl<T: Socket + 'static> From<T> for Box<dyn Socket> {
+//     fn from(value: T) -> Self {
+//         Box::new(value)
+//     }
+// }
+
+
+// enum ChannelSocket {
+//     Channel(Box<dyn Channel>),
+//     Socket(Box<dyn Socket>)
+// }
+//
+// impl ChannelOrSocket for ChannelSocket {
+//     fn handle(&self) -> u16 {
+//         match self {
+//             ChannelSocket::Channel(channel) => channel.channel(),
+//             ChannelSocket::Socket(socket) => socket.handle()
+//         }
+//     }
+// }
+
+// impl<T: Channel + 'static> From<T> for ChannelSocket {
+//     fn from(value: T) -> Self {
+//         ChannelSocket::Channel(Box::new(value))
+//     }
+// }
+//
+// impl<T: Socket + 'static> From<T> for ChannelSocket {
+//     fn from(value: T) -> Self {
+//         ChannelSocket::Socket(Box::new(value))
+//     }
+// }
 
 /* Baudrate */
 
